@@ -4,11 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FF6B35">
 <title>數學錯題相似題產生器</title>
-<link rel="manifest" href="data:application/json,{}">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea'] },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 <style>
 :root {
   --bg: #FFF8F0;
@@ -29,7 +35,6 @@
 html { scroll-behavior: smooth; }
 body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); font-size: 16px; }
 
-/* ===== HEADER ===== */
 header {
   background: var(--card); border-bottom: 2px solid var(--border);
   padding: 14px 18px; display: flex; align-items: center; gap: 12px;
@@ -45,34 +50,28 @@ header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 }
 .history-btn:hover, .setup-btn:hover { border-color: var(--primary); background: var(--primary-light); }
 
-/* ===== MAIN ===== */
 .main { max-width: 680px; margin: 0 auto; padding: 16px 14px calc(80px + var(--safe-bottom)); display: flex; flex-direction: column; gap: 14px; }
 
-/* ===== CARD ===== */
 .card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); overflow: hidden; }
 .card-header { padding: 13px 18px 11px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
 .card-header .step { width: 26px; height: 26px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 700; flex-shrink: 0; }
 .card-header h2 { font-size: 15px; font-weight: 700; }
 .card-body { padding: 16px; }
 
-/* ===== GRADE ===== */
 .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .grade-btn {
   border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white;
   padding: 14px 4px; font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all .15s; text-align: center;
-  min-height: 52px;
+  font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all .15s; text-align: center; min-height: 52px;
 }
 .grade-btn:active { transform: scale(.96); }
 .grade-btn.active { border-color: var(--primary); background: var(--primary); color: white; font-weight: 700; }
 
-/* ===== QUESTION TYPE ===== */
 .qtype-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .qtype-btn {
   border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white;
   padding: 13px 12px; font-family: 'Noto Sans TC', sans-serif;
-  cursor: pointer; transition: all .15s; text-align: left; display: flex; align-items: center; gap: 10px;
-  min-height: 64px;
+  cursor: pointer; transition: all .15s; text-align: left; display: flex; align-items: center; gap: 10px; min-height: 64px;
 }
 .qtype-btn:active { transform: scale(.97); }
 .qt-icon { font-size: 22px; flex-shrink: 0; }
@@ -83,14 +82,9 @@ header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .qtype-btn.active .qt-name { color: white; }
 .qtype-btn.active .qt-desc { color: rgba(255,255,255,.7); }
 
-.figure-notice {
-  display: none; background: #FEF9E7; border: 1.5px solid #F9CA24;
-  border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px;
-  color: #856404; line-height: 1.7; margin-top: 10px;
-}
+.figure-notice { display: none; background: #FEF9E7; border: 1.5px solid #F9CA24; border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: #856404; line-height: 1.7; margin-top: 10px; }
 .figure-notice.show { display: block; }
 
-/* ===== CAMERA / UPLOAD ===== */
 .media-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 .media-btn {
   border: 2px solid var(--border); border-radius: var(--radius); background: white;
@@ -107,43 +101,22 @@ header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .preview-wrap { display: none; margin-bottom: 12px; position: relative; }
 .preview-wrap.show { display: block; }
 .preview-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: #F8F8F8; }
-.remove-img {
-  position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.6); color: white;
-  border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-}
+.remove-img { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 .divider { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; margin: 12px 0; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-textarea {
-  width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 13px 14px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif;
-  color: var(--text); resize: none; outline: none; min-height: 90px; line-height: 1.7;
-  transition: border-color .2s; background: white;
-}
+textarea { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; color: var(--text); resize: none; outline: none; min-height: 90px; line-height: 1.7; transition: border-color .2s; background: white; }
 textarea:focus { border-color: var(--primary); }
 
-/* ===== BOTTOM GENERATE BTN (fixed) ===== */
-.bottom-bar {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 25;
-  background: white; border-top: 1.5px solid var(--border);
-  padding: 12px 16px calc(12px + var(--safe-bottom));
-}
-.generate-btn {
-  width: 100%; background: var(--primary); color: white; border: none;
-  border-radius: var(--radius); padding: 17px; font-size: 17px;
-  font-family: 'Nunito', sans-serif; font-weight: 900; cursor: pointer;
-  transition: all .18s; letter-spacing: 0.5px;
-}
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 25; background: white; border-top: 1.5px solid var(--border); padding: 12px 16px calc(12px + var(--safe-bottom)); }
+.generate-btn { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius); padding: 17px; font-size: 17px; font-family: 'Nunito', sans-serif; font-weight: 900; cursor: pointer; transition: all .18s; letter-spacing: 0.5px; }
 .generate-btn:active { transform: scale(.98); background: var(--primary-dark); }
 .generate-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-/* ===== ERROR ===== */
 .error-box { display: none; background: #FFF0F0; border: 1.5px solid #FFB5B5; border-radius: var(--radius-sm); padding: 14px 16px; color: #C0392B; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
 .error-box.show { display: block; }
 
-/* ===== LOADING ===== */
 .loading { display: none; text-align: center; padding: 36px 20px; }
 .loading.show { display: block; }
 .dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
@@ -153,7 +126,6 @@ textarea:focus { border-color: var(--primary); }
 @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.5;}40%{transform:translateY(-13px);opacity:1;} }
 .loading p { color: var(--text-muted); font-size: 14px; }
 
-/* ===== RESULT ===== */
 .result-section { display: none; }
 .result-section.show { display: block; }
 .result-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
@@ -162,13 +134,10 @@ textarea:focus { border-color: var(--primary); }
 .badge { background: var(--primary-light); color: var(--primary); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
 .qtype-badge { border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
 .export-btns { display: flex; gap: 8px; width: 100%; }
-.export-btn {
-  flex: 1; background: white; border: 1.5px solid var(--border); border-radius: 10px;
-  padding: 10px 10px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700;
-  cursor: pointer; transition: all .15s; text-align: center; color: var(--text);
-}
+.export-btn { flex: 1; background: white; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; cursor: pointer; transition: all .15s; text-align: center; color: var(--text); }
 .export-btn:active { transform: scale(.97); }
 .export-btn.print-btn { border-color: var(--accent); color: var(--accent); }
+
 .original-summary { background: #F5F5F5; border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px; font-size: 14px; color: var(--text-muted); line-height: 1.8; border-left: 4px solid var(--primary); }
 .original-summary strong { color: var(--primary); display: block; margin-bottom: 3px; font-size: 12px; }
 .figure-result-notice { display: none; background: #FEF9E7; border: 1.5px solid #F0C56E; border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: #7B5800; line-height: 1.8; margin-bottom: 14px; }
@@ -180,36 +149,27 @@ textarea:focus { border-color: var(--primary); }
 .q-label { font-size: 14px; color: var(--primary-dark); font-weight: 700; }
 .q-type-tag { margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
 .q-body { padding: 16px; }
-.q-text { font-size: 16px; line-height: 2; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+
+/* ===== 數學式樣式 ===== */
+.q-text {
+  font-size: 16px; line-height: 2.2; color: var(--text);
+  word-break: break-word; overflow-wrap: break-word;
+}
+.q-text .MJX-TEX, .q-answer-content .MJX-TEX { font-size: 1.1em; }
+
 .q-figure-hint { margin-top: 10px; background: #FEF9E7; border-left: 3px solid #E67E22; padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: 13px; color: #7B5800; line-height: 1.6; }
 .q-answer { margin-top: 14px; background: var(--accent-light); border: 1.5px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 14px; }
-.q-answer-toggle {
-  background: none; border: none; cursor: pointer; font-size: 14px; color: var(--accent);
-  font-weight: 700; padding: 0; display: flex; align-items: center; gap: 8px;
-  font-family: 'Noto Sans TC', sans-serif; width: 100%; min-height: 44px;
-}
-.q-answer-content { display: none; margin-top: 10px; font-size: 14px; color: #0D7A74; line-height: 1.9; white-space: pre-wrap; }
+.q-answer-toggle { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--accent); font-weight: 700; padding: 0; display: flex; align-items: center; gap: 8px; font-family: 'Noto Sans TC', sans-serif; width: 100%; min-height: 44px; }
+.q-answer-content { display: none; margin-top: 10px; font-size: 14px; color: #0D7A74; line-height: 2; }
 .q-answer-content.show { display: block; }
 
-.reset-btn {
-  width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary);
-  border-radius: var(--radius); padding: 15px; font-size: 15px;
-  font-family: 'Noto Sans TC', sans-serif; font-weight: 700; cursor: pointer;
-  transition: all .18s; margin-top: 6px; min-height: 52px;
-}
+.reset-btn { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: var(--radius); padding: 15px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; cursor: pointer; transition: all .18s; margin-top: 6px; min-height: 52px; }
 .reset-btn:active { transform: scale(.98); background: var(--primary-light); }
 
-/* ===== SETUP MODAL (API Key guide) ===== */
-.modal-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
-  z-index: 50; align-items: flex-end; justify-content: center;
-}
+/* ===== SETUP MODAL ===== */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; align-items: flex-end; justify-content: center; }
 .modal-overlay.show { display: flex; }
-.modal-box {
-  background: white; border-radius: 24px 24px 0 0; padding: 24px 20px calc(24px + var(--safe-bottom));
-  width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto;
-  animation: slideUp .25s ease;
-}
+.modal-box { background: white; border-radius: 24px 24px 0 0; padding: 24px 20px calc(24px + var(--safe-bottom)); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
 @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
 .modal-handle { width: 40px; height: 4px; background: #DDD; border-radius: 4px; margin: 0 auto 20px; }
 .modal-box h3 { font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 900; color: var(--primary); margin-bottom: 16px; }
@@ -219,17 +179,9 @@ textarea:focus { border-color: var(--primary); }
 .setup-step .ss-text a { color: var(--primary); font-weight: 700; text-decoration: none; }
 .setup-step .ss-text code { background: #F5F5F5; padding: 2px 7px; border-radius: 5px; font-size: 13px; font-family: monospace; }
 .api-input-row { display: flex; gap: 8px; margin-top: 6px; }
-.api-input-row input {
-  flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px;
-  font-size: 14px; font-family: monospace; outline: none; background: white; color: var(--text);
-  transition: border-color .2s;
-}
+.api-input-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: monospace; outline: none; background: white; color: var(--text); transition: border-color .2s; }
 .api-input-row input:focus { border-color: var(--primary); }
-.save-key-btn {
-  background: var(--primary); color: white; border: none; border-radius: 10px;
-  padding: 12px 18px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
-  cursor: pointer; white-space: nowrap;
-}
+.save-key-btn { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif; cursor: pointer; white-space: nowrap; }
 .save-key-btn:active { background: var(--primary-dark); }
 .key-status { font-size: 12px; margin-top: 6px; height: 16px; }
 .key-status.ok { color: #27AE60; }
@@ -237,16 +189,13 @@ textarea:focus { border-color: var(--primary); }
 .modal-close { width: 100%; background: #F5F5F5; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; color: var(--text-muted); cursor: pointer; margin-top: 16px; }
 .modal-close:active { background: #EBEBEB; }
 
-/* ===== HISTORY PANEL ===== */
+/* ===== HISTORY ===== */
 .history-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; align-items: flex-end; justify-content: center; }
 .history-overlay.show { display: flex; }
 .history-box { background: white; border-radius: 24px 24px 0 0; padding: 20px 18px calc(20px + var(--safe-bottom)); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
 .history-box h3 { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 14px; }
 .history-empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 30px 0; }
-.history-item {
-  border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px;
-  margin-bottom: 10px; cursor: pointer; transition: all .15s;
-}
+.history-item { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 10px; cursor: pointer; transition: all .15s; }
 .history-item:active { background: var(--primary-light); border-color: var(--primary); }
 .hi-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
 .hi-grade { background: var(--primary-light); color: var(--primary); border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 700; }
@@ -287,8 +236,6 @@ textarea:focus { border-color: var(--primary); }
 </header>
 
 <div class="main">
-
-  <!-- 步驟1：年級 -->
   <div class="card">
     <div class="card-header"><div class="step">1</div><h2>選擇年級</h2></div>
     <div class="card-body">
@@ -303,35 +250,19 @@ textarea:focus { border-color: var(--primary); }
     </div>
   </div>
 
-  <!-- 步驟2：題型 -->
   <div class="card">
     <div class="card-header"><div class="step">2</div><h2>題型</h2></div>
     <div class="card-body">
       <div class="qtype-grid">
-        <button class="qtype-btn active" data-type="auto">
-          <span class="qt-icon">🤖</span>
-          <span class="qt-info"><span class="qt-name">AI 自動判斷</span><span class="qt-desc">自動識別題型</span></span>
-        </button>
-        <button class="qtype-btn" data-type="計算題">
-          <span class="qt-icon">🔢</span>
-          <span class="qt-info"><span class="qt-name">計算題</span><span class="qt-desc">加減乘除、分數</span></span>
-        </button>
-        <button class="qtype-btn" data-type="應用題">
-          <span class="qt-icon">📖</span>
-          <span class="qt-info"><span class="qt-name">應用題</span><span class="qt-desc">文字情境解題</span></span>
-        </button>
-        <button class="qtype-btn" data-type="圖形題">
-          <span class="qt-icon">📐</span>
-          <span class="qt-info"><span class="qt-name">圖形題</span><span class="qt-desc">幾何、面積、統計</span></span>
-        </button>
+        <button class="qtype-btn active" data-type="auto"><span class="qt-icon">🤖</span><span class="qt-info"><span class="qt-name">AI 自動判斷</span><span class="qt-desc">自動識別題型</span></span></button>
+        <button class="qtype-btn" data-type="計算題"><span class="qt-icon">🔢</span><span class="qt-info"><span class="qt-name">計算題</span><span class="qt-desc">加減乘除、分數</span></span></button>
+        <button class="qtype-btn" data-type="應用題"><span class="qt-icon">📖</span><span class="qt-info"><span class="qt-name">應用題</span><span class="qt-desc">文字情境解題</span></span></button>
+        <button class="qtype-btn" data-type="圖形題"><span class="qt-icon">📐</span><span class="qt-info"><span class="qt-name">圖形題</span><span class="qt-desc">幾何、面積、統計</span></span></button>
       </div>
-      <div class="figure-notice" id="figureNotice">
-        📌 <strong>圖形題說明：</strong>AI 會以文字描述圖形，並在每題附上「教師備注」說明需補充的圖形或作圖空間。
-      </div>
+      <div class="figure-notice" id="figureNotice">📌 <strong>圖形題說明：</strong>AI 會以文字描述圖形，並附上「教師備注」說明需補充的圖形或作圖空間。</div>
     </div>
   </div>
 
-  <!-- 步驟3：上傳題目 -->
   <div class="card">
     <div class="card-header"><div class="step">3</div><h2>上傳錯題</h2></div>
     <div class="card-body">
@@ -359,18 +290,10 @@ textarea:focus { border-color: var(--primary); }
   </div>
 
   <div class="error-box" id="errorBox"></div>
+  <div class="loading" id="loading"><div class="dots"><span></span><span></span><span></span></div><p>AI 正在出題中，請稍候⋯</p></div>
 
-  <div class="loading" id="loading">
-    <div class="dots"><span></span><span></span><span></span></div>
-    <p>AI 正在出題中，請稍候⋯</p>
-  </div>
-
-  <!-- 結果 -->
   <div class="result-section" id="resultSection">
-    <div class="print-header" id="printHeader">
-      <h2 style="font-size:20px;font-weight:700;color:#FF6B35;margin-bottom:6px;">數學練習題</h2>
-      <p id="printMeta" style="font-size:14px;color:#888;"></p>
-    </div>
+    <div class="print-header"><h2 style="font-size:20px;font-weight:700;color:#FF6B35;margin-bottom:6px;">數學練習題</h2><p id="printMeta" style="font-size:14px;color:#888;"></p></div>
     <div class="result-topbar">
       <div class="result-title">
         <h2>📝 相似題</h2>
@@ -382,51 +305,35 @@ textarea:focus { border-color: var(--primary); }
         <button class="export-btn" id="copyBtn" onclick="copyAll()">📋 複製文字</button>
       </div>
     </div>
-    <div class="figure-result-notice" id="figureResultNotice">
-      ⚠️ <strong>圖形題：</strong>題目已用文字描述圖形，請依「教師備注」補充圖形或作圖空間。
-    </div>
+    <div class="figure-result-notice" id="figureResultNotice">⚠️ <strong>圖形題：</strong>題目已用文字描述圖形，請依「教師備注」補充圖形或作圖空間。</div>
     <div class="original-summary" id="originalSummary"></div>
     <div id="questionsContainer"></div>
     <button class="reset-btn" onclick="resetAll()">🔄 重新上傳題目</button>
   </div>
-
 </div>
 
-<!-- 固定底部按鈕 -->
 <div class="bottom-bar">
   <button class="generate-btn" id="generateBtn" onclick="generate()">✨ 產生 3 題相似題</button>
 </div>
 
-<!-- ===== SETUP MODAL ===== -->
+<!-- SETUP MODAL -->
 <div class="modal-overlay" id="setupModal" onclick="closeSetupIfBg(event)">
   <div class="modal-box">
     <div class="modal-handle"></div>
     <h3>⚙️ API Key 設定</h3>
-
-    <div class="setup-step">
-      <div class="ss-num">1</div>
-      <div class="ss-text">前往 <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> 免費申請帳號</div>
-    </div>
-    <div class="setup-step">
-      <div class="ss-num">2</div>
-      <div class="ss-text">登入後點選「Create API Key」，複製以 <code>gsk_</code> 開頭的金鑰</div>
-    </div>
-    <div class="setup-step">
-      <div class="ss-num">3</div>
-      <div class="ss-text">貼到下方並儲存（金鑰只存在您的手機，不會上傳到任何伺服器）</div>
-    </div>
-
+    <div class="setup-step"><div class="ss-num">1</div><div class="ss-text">前往 <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> 免費申請帳號</div></div>
+    <div class="setup-step"><div class="ss-num">2</div><div class="ss-text">登入後點「Create API Key」，複製以 <code>gsk_</code> 開頭的金鑰</div></div>
+    <div class="setup-step"><div class="ss-num">3</div><div class="ss-text">貼到下方並儲存（金鑰只存在您的手機，不會上傳）</div></div>
     <div class="api-input-row">
       <input type="password" id="modalApiKey" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
       <button class="save-key-btn" onclick="saveKey()">儲存</button>
     </div>
     <div class="key-status" id="keyStatus"></div>
-
     <button class="modal-close" onclick="closeSetup()">關閉</button>
   </div>
 </div>
 
-<!-- ===== HISTORY PANEL ===== -->
+<!-- HISTORY PANEL -->
 <div class="history-overlay" id="historyPanel" onclick="closeHistoryIfBg(event)">
   <div class="history-box">
     <div class="modal-handle"></div>
@@ -444,7 +351,6 @@ let imageBase64 = '';
 let imageType = '';
 let lastResult = null;
 
-// ===== GRADE =====
 document.querySelectorAll('.grade-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
@@ -453,7 +359,6 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
   });
 });
 
-// ===== QTYPE =====
 document.querySelectorAll('.qtype-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.qtype-btn').forEach(b => b.classList.remove('active'));
@@ -463,7 +368,6 @@ document.querySelectorAll('.qtype-btn').forEach(btn => {
   });
 });
 
-// ===== CAMERA / GALLERY =====
 document.getElementById('cameraInput').addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
 document.getElementById('galleryInput').addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
 
@@ -489,7 +393,6 @@ document.getElementById('removeImg').addEventListener('click', () => {
   document.getElementById('galleryInput').value = '';
 });
 
-// ===== TYPE COLORS =====
 const typeColors = {
   '計算題': { bg:'#EBF5FB', color:'#2980B9', border:'#AED6F1' },
   '應用題': { bg:'#EAFAF1', color:'#27AE60', border:'#A9DFBF' },
@@ -497,33 +400,30 @@ const typeColors = {
   '一般題': { bg:'#F5F5F5', color:'#888', border:'#DDD' },
 };
 
-// ===== SYSTEM PROMPT =====
 function buildSystemPrompt() {
   const typeHint = selectedType === 'auto'
     ? '請自動判斷題型（計算題、應用題或圖形題）。'
     : `這是一道【${selectedType}】。`;
-  const figureExtra = (selectedType === '圖形題' || selectedType === 'auto') ? `
-若題目含有圖形（幾何圖形、統計圖表、時鐘等）：
-1. 在題目文字中清楚描述圖形的尺寸/數值，讓題目不依賴圖片也能理解
-2. 在 hasFigure 設為 true
-3. 在 figureHint 說明教師需配合提供哪種圖形或作圖空間
-若需要學生作圖，請在 figureHint 中說明「請提供方格紙作答空間」。` : '';
   return `你是一位專業的國小數學老師，擅長為學生出相似練習題。
 ${typeHint}
 根據老師提供的錯題，出 3 道類似的練習題，難度和考點與原題相同，適合${selectedGrade}學生程度。
-${figureExtra}
+
+【重要】數學式書寫規則：
+- 所有分數必須用 LaTeX 格式：整數帶分數寫成 $整數\\frac{分子}{分母}$，例如 $5\\frac{3}{9}$
+- 純分數寫成 $\\frac{分子}{分母}$，例如 $\\frac{3}{16}$
+- 計算式也用 LaTeX，例如 $5\\frac{3}{9} \\times \\frac{3}{16} - \\frac{21}{25}$
+- 解題步驟中每一行數學式也要用 LaTeX 格式
+
 規則：符合${selectedGrade}課程範圍；數字大小合理，情境貼近生活；每題附清楚解題步驟與答案；不直接複製原題。
 
 請只回傳以下 JSON，不含其他文字：
-{"originalSummary":"原題摘要（一句話說明題型和考點）","detectedType":"計算題或應用題或圖形題","questions":[{"question":"完整題目","solution":"解題步驟","answer":"最終答案","hasFigure":false,"figureHint":""},{"question":"完整題目","solution":"解題步驟","answer":"最終答案","hasFigure":false,"figureHint":""},{"question":"完整題目","solution":"解題步驟","answer":"最終答案","hasFigure":false,"figureHint":""}]}`;
+{"originalSummary":"原題摘要","detectedType":"計算題或應用題或圖形題","questions":[{"question":"題目文字（含LaTeX分數）","solution":"解題步驟（含LaTeX）","answer":"答案（含LaTeX）","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""}]}`;
 }
 
-// ===== GENERATE =====
 async function generate() {
   const apiKey = localStorage.getItem('groq_api_key') || '';
   const questionText = document.getElementById('questionText').value.trim();
   document.getElementById('errorBox').classList.remove('show');
-
   if (!apiKey) { showError('請先點右上角 ⚙️ 設定 API Key。'); return; }
   if (!selectedGrade) { showError('請選擇學生年級。'); return; }
   if (!imageBase64 && !questionText) { showError('請拍照或輸入題目文字。'); return; }
@@ -555,7 +455,7 @@ async function callVision(apiKey) {
         {role:'system', content:buildSystemPrompt()},
         {role:'user', content:[
           {type:'image_url', image_url:{url:`data:${imageType};base64,${imageBase64}`}},
-          {type:'text', text:`這是一道${selectedGrade}的數學錯題照片，請辨識題目內容並出 3 道相似題，以 JSON 格式回傳。`}
+          {type:'text', text:`這是一道${selectedGrade}的數學錯題照片，請辨識題目內容並出 3 道相似題，以 JSON 格式回傳。分數請用 LaTeX 格式表示。`}
         ]}
       ],
       max_tokens:2500, temperature:0.7
@@ -572,7 +472,7 @@ async function callText(apiKey, questionText) {
       model:'llama-3.3-70b-versatile',
       messages:[
         {role:'system', content:buildSystemPrompt()},
-        {role:'user', content:`以下是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題，以 JSON 格式回傳。`}
+        {role:'user', content:`以下是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題，以 JSON 格式回傳。分數請用 LaTeX 格式表示。`}
       ],
       max_tokens:2500, temperature:0.7
     })
@@ -592,7 +492,7 @@ async function parseResp(response) {
   return JSON.parse(m[0]);
 }
 
-// ===== RENDER =====
+// ===== 渲染結果（含 MathJax）=====
 function renderResult(data) {
   const detectedType = data.detectedType || (selectedType !== 'auto' ? selectedType : '一般題');
   const hasFigure = (data.questions||[]).some(q=>q.hasFigure);
@@ -605,7 +505,7 @@ function renderResult(data) {
   document.getElementById('figureResultNotice').classList.toggle('show', hasFigure);
   document.getElementById('printMeta').textContent = `${selectedGrade} ・ ${detectedType} ・ 共 3 題`;
   document.getElementById('originalSummary').innerHTML =
-    `<strong>📌 原題分析</strong>${esc(data.originalSummary||'已識別題目，以下為相似練習題')}`;
+    `<strong>📌 原題分析</strong>${sanitize(data.originalSummary||'已識別題目，以下為相似練習題')}`;
 
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
@@ -613,7 +513,9 @@ function renderResult(data) {
     const card = document.createElement('div');
     card.className = 'question-card';
     const figTag = q.hasFigure ? `<span class="q-type-tag" style="background:${tc.bg};color:${tc.color};">📐 含圖形</span>` : '';
-    const figHint = q.hasFigure && q.figureHint ? `<div class="q-figure-hint">✏️ 教師備注：${esc(q.figureHint)}</div>` : '';
+    const figHint = q.hasFigure && q.figureHint ? `<div class="q-figure-hint">✏️ 教師備注：${sanitize(q.figureHint)}</div>` : '';
+    // 解題步驟換行處理
+    const solutionHtml = sanitize(q.solution||'').replace(/\n/g, '<br>');
     card.innerHTML = `
       <div class="q-header">
         <div class="q-num">${i+1}</div>
@@ -621,27 +523,49 @@ function renderResult(data) {
         ${figTag}
       </div>
       <div class="q-body">
-        <div class="q-text">${esc(q.question)}</div>
+        <div class="q-text">${sanitize(q.question||'')}</div>
         ${figHint}
         <div class="q-answer">
           <button class="q-answer-toggle" onclick="toggleAns(this)"><span>▶</span> 查看解題過程與答案</button>
           <div class="q-answer-content">
-${esc(q.solution)}
-
-✅ 答案：${esc(q.answer)}</div>
+            <div>${solutionHtml}</div>
+            <div style="margin-top:10px;font-weight:700;">✅ 答案：${sanitize(q.answer||'')}</div>
+          </div>
         </div>
       </div>`;
     container.appendChild(card);
   });
 
   document.getElementById('resultSection').classList.add('show');
-  setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'}), 100);
+
+  // 觸發 MathJax 渲染
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([document.getElementById('questionsContainer'), document.getElementById('originalSummary')])
+      .then(() => {
+        setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'}), 100);
+      });
+  } else {
+    setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'}), 100);
+  }
+}
+
+// sanitize：保留 $ LaTeX $，只跳脫 HTML 特殊字元（不跳脫 $ \ { }）
+function sanitize(s) {
+  if (!s) return '';
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function toggleAns(btn) {
   const c = btn.nextElementSibling;
   c.classList.toggle('show');
   btn.querySelector('span').textContent = c.classList.contains('show') ? '▼' : '▶';
+  // 重新渲染展開的答案
+  if (c.classList.contains('show') && window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([c]);
+  }
 }
 
 function printResult() {
@@ -662,14 +586,7 @@ function copyAll() {
     const orig = btn.textContent;
     btn.textContent = '✅ 已複製！';
     setTimeout(() => btn.textContent = orig, 2000);
-  }).catch(() => {
-    showError('複製失敗，請手動長按文字複製。');
-  });
-}
-
-function esc(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }).catch(() => showError('複製失敗，請手動長按文字複製。'));
 }
 
 function showError(msg) {
@@ -691,110 +608,63 @@ function resetAll() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-// ===== SETUP MODAL =====
+// ===== SETUP =====
 function openSetup() {
-  const saved = localStorage.getItem('groq_api_key') || '';
-  document.getElementById('modalApiKey').value = saved;
+  document.getElementById('modalApiKey').value = localStorage.getItem('groq_api_key') || '';
   updateKeyStatus();
   document.getElementById('setupModal').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
-function closeSetup() {
-  document.getElementById('setupModal').classList.remove('show');
-  document.body.style.overflow = '';
-}
+function closeSetup() { document.getElementById('setupModal').classList.remove('show'); document.body.style.overflow = ''; }
 function closeSetupIfBg(e) { if (e.target === document.getElementById('setupModal')) closeSetup(); }
 function saveKey() {
   const key = document.getElementById('modalApiKey').value.trim();
-  if (key) {
-    localStorage.setItem('groq_api_key', key);
-    updateKeyStatus();
-    setTimeout(closeSetup, 800);
-  }
+  if (key) { localStorage.setItem('groq_api_key', key); updateKeyStatus(); setTimeout(closeSetup, 800); }
 }
 function updateKeyStatus() {
   const key = localStorage.getItem('groq_api_key') || '';
   const el = document.getElementById('keyStatus');
-  if (key && key.startsWith('gsk_')) {
-    el.textContent = '✅ API Key 已設定';
-    el.className = 'key-status ok';
-  } else {
-    el.textContent = '⚠️ 尚未設定 API Key';
-    el.className = 'key-status missing';
-  }
+  el.textContent = (key && key.startsWith('gsk_')) ? '✅ API Key 已設定' : '⚠️ 尚未設定 API Key';
+  el.className = 'key-status ' + ((key && key.startsWith('gsk_')) ? 'ok' : 'missing');
 }
 
 // ===== HISTORY =====
 function saveHistory(result) {
   try {
     const history = JSON.parse(localStorage.getItem('math_history') || '[]');
-    history.unshift({
-      grade: selectedGrade,
-      type: result.detectedType || selectedType,
-      summary: result.originalSummary || '',
-      questions: result.questions,
-      time: new Date().toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})
-    });
-    localStorage.setItem('math_history', JSON.stringify(history.slice(0, 20)));
+    history.unshift({ grade:selectedGrade, type:result.detectedType||selectedType, summary:result.originalSummary||'', questions:result.questions, time:new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) });
+    localStorage.setItem('math_history', JSON.stringify(history.slice(0,20)));
   } catch(e) {}
 }
-
-function openHistory() {
-  renderHistoryList();
-  document.getElementById('historyPanel').classList.add('show');
-  document.body.style.overflow = 'hidden';
-}
-function closeHistory() {
-  document.getElementById('historyPanel').classList.remove('show');
-  document.body.style.overflow = '';
-}
-function closeHistoryIfBg(e) { if (e.target === document.getElementById('historyPanel')) closeHistory(); }
-
+function openHistory() { renderHistoryList(); document.getElementById('historyPanel').classList.add('show'); document.body.style.overflow='hidden'; }
+function closeHistory() { document.getElementById('historyPanel').classList.remove('show'); document.body.style.overflow=''; }
+function closeHistoryIfBg(e) { if (e.target===document.getElementById('historyPanel')) closeHistory(); }
 function renderHistoryList() {
   const history = JSON.parse(localStorage.getItem('math_history') || '[]');
   const list = document.getElementById('historyList');
-  if (!history.length) {
-    list.innerHTML = '<div class="history-empty">📭 還沒有出題紀錄</div>';
-    return;
-  }
-  const tc = typeColors;
-  list.innerHTML = history.map((h, i) => {
-    const c = tc[h.type] || tc['一般題'];
-    return `<div class="history-item" onclick="loadHistory(${i})">
-      <div class="hi-meta">
-        <span class="hi-grade">${h.grade}</span>
-        <span class="hi-type" style="background:${c.bg};color:${c.color};">${h.type}</span>
-        <span class="hi-time">${h.time}</span>
-      </div>
-      <div class="hi-summary">${h.summary || '點擊查看題目'}</div>
-    </div>`;
+  if (!history.length) { list.innerHTML = '<div class="history-empty">📭 還沒有出題紀錄</div>'; return; }
+  list.innerHTML = history.map((h,i) => {
+    const c = typeColors[h.type] || typeColors['一般題'];
+    return `<div class="history-item" onclick="loadHistory(${i})"><div class="hi-meta"><span class="hi-grade">${h.grade}</span><span class="hi-type" style="background:${c.bg};color:${c.color};">${h.type}</span><span class="hi-time">${h.time}</span></div><div class="hi-summary">${h.summary||'點擊查看題目'}</div></div>`;
   }).join('');
 }
-
 function loadHistory(index) {
   const history = JSON.parse(localStorage.getItem('math_history') || '[]');
   const item = history[index];
   if (!item) return;
   selectedGrade = item.grade;
-  document.querySelectorAll('.grade-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.grade === item.grade);
-  });
-  lastResult = { detectedType: item.type, originalSummary: item.summary, questions: item.questions };
+  document.querySelectorAll('.grade-btn').forEach(b => b.classList.toggle('active', b.dataset.grade===item.grade));
+  lastResult = { detectedType:item.type, originalSummary:item.summary, questions:item.questions };
   closeHistory();
   renderResult(lastResult);
 }
-
 function clearHistory() {
-  if (confirm('確定要清除所有出題紀錄嗎？')) {
-    localStorage.removeItem('math_history');
-    renderHistoryList();
-  }
+  if (confirm('確定要清除所有出題紀錄嗎？')) { localStorage.removeItem('math_history'); renderHistoryList(); }
 }
 
-// ===== INIT =====
+// Init
 updateKeyStatus();
-const hasKey = localStorage.getItem('groq_api_key');
-if (!hasKey) setTimeout(openSetup, 600);
+if (!localStorage.getItem('groq_api_key')) setTimeout(openSetup, 600);
 </script>
 </body>
 </html>
