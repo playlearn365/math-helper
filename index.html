@@ -7,33 +7,30 @@
 <meta name="theme-color" content="#FF6B35">
 <title>數學錯題相似題產生器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
-<script>
-window.MathJax = {
-  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$']] },
-  options: { skipHtmlTags: ['script','noscript','style','textarea'] },
-  startup: { typeset: false }
-};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 <style>
 :root {
-  --bg: #FFF8F0;
-  --card: #FFFFFF;
-  --primary: #FF6B35;
-  --primary-light: #FFF0EB;
-  --primary-dark: #D94F1E;
-  --accent: #4ECDC4;
-  --accent-light: #E8FAFA;
-  --text: #2D2D2D;
-  --text-muted: #888;
-  --border: #F0E6DC;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #FFF8F0; --card: #FFFFFF; --primary: #FF6B35; --primary-light: #FFF0EB;
+  --primary-dark: #D94F1E; --accent: #4ECDC4; --accent-light: #E8FAFA;
+  --text: #2D2D2D; --text-muted: #888; --border: #F0E6DC;
+  --radius: 16px; --radius-sm: 10px; --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html { scroll-behavior: smooth; }
 body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); font-size: 16px; }
+
+/* ===== 分數樣式 ===== */
+.frac {
+  display: inline-flex; flex-direction: column; align-items: center;
+  vertical-align: middle; font-size: 0.85em; line-height: 1.2;
+  margin: 0 2px; position: relative; top: -1px;
+}
+.frac-num { border-bottom: 1.5px solid currentColor; padding: 0 3px; text-align: center; min-width: 16px; }
+.frac-den { padding: 0 3px; text-align: center; min-width: 16px; }
+.mixed-num {
+  display: inline-flex; align-items: center; gap: 1px;
+  vertical-align: middle;
+}
+.mixed-int { font-size: 1em; }
 
 header {
   background: var(--card); border-bottom: 2px solid var(--border);
@@ -44,10 +41,7 @@ header {
 header h1 { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: var(--primary); line-height: 1.2; }
 header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .header-right { margin-left: auto; display: flex; gap: 8px; }
-.history-btn, .setup-btn {
-  background: none; border: 1.5px solid var(--border); border-radius: 10px;
-  padding: 7px 10px; font-size: 18px; cursor: pointer; transition: all .18s;
-}
+.history-btn, .setup-btn { background: none; border: 1.5px solid var(--border); border-radius: 10px; padding: 7px 10px; font-size: 18px; cursor: pointer; transition: all .18s; }
 .history-btn:hover, .setup-btn:hover { border-color: var(--primary); background: var(--primary-light); }
 
 .main { max-width: 680px; margin: 0 auto; padding: 16px 14px calc(80px + var(--safe-bottom)); display: flex; flex-direction: column; gap: 14px; }
@@ -59,20 +53,12 @@ header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .card-body { padding: 16px; }
 
 .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.grade-btn {
-  border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white;
-  padding: 14px 4px; font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all .15s; text-align: center; min-height: 52px;
-}
+.grade-btn { border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; padding: 14px 4px; font-size: 14px; font-family: 'Noto Sans TC', sans-serif; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all .15s; text-align: center; min-height: 52px; }
 .grade-btn:active { transform: scale(.96); }
 .grade-btn.active { border-color: var(--primary); background: var(--primary); color: white; font-weight: 700; }
 
 .qtype-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.qtype-btn {
-  border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white;
-  padding: 13px 12px; font-family: 'Noto Sans TC', sans-serif;
-  cursor: pointer; transition: all .15s; text-align: left; display: flex; align-items: center; gap: 10px; min-height: 64px;
-}
+.qtype-btn { border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; padding: 13px 12px; font-family: 'Noto Sans TC', sans-serif; cursor: pointer; transition: all .15s; text-align: left; display: flex; align-items: center; gap: 10px; min-height: 64px; }
 .qtype-btn:active { transform: scale(.97); }
 .qt-icon { font-size: 22px; flex-shrink: 0; }
 .qt-info { display: flex; flex-direction: column; }
@@ -86,14 +72,9 @@ header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .figure-notice.show { display: block; }
 
 .media-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.media-btn {
-  border: 2px solid var(--border); border-radius: var(--radius); background: white;
-  padding: 20px 10px; text-align: center; cursor: pointer; transition: all .18s;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative;
-}
+.media-btn { border: 2px solid var(--border); border-radius: var(--radius); background: white; padding: 20px 10px; text-align: center; cursor: pointer; transition: all .18s; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
 .media-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .media-btn:active { transform: scale(.97); }
-.media-btn:hover { border-color: var(--primary); background: var(--primary-light); }
 .media-btn .mb-icon { font-size: 32px; }
 .media-btn .mb-label { font-size: 14px; font-weight: 700; color: var(--text); }
 .media-btn .mb-sub { font-size: 11px; color: var(--text-muted); }
@@ -138,7 +119,7 @@ textarea:focus { border-color: var(--primary); }
 .export-btn:active { transform: scale(.97); }
 .export-btn.print-btn { border-color: var(--accent); color: var(--accent); }
 
-.original-summary { background: #F5F5F5; border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px; font-size: 14px; color: var(--text-muted); line-height: 1.8; border-left: 4px solid var(--primary); }
+.original-summary { background: #F5F5F5; border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px; font-size: 14px; color: var(--text-muted); line-height: 2; border-left: 4px solid var(--primary); }
 .original-summary strong { color: var(--primary); display: block; margin-bottom: 3px; font-size: 12px; }
 .figure-result-notice { display: none; background: #FEF9E7; border: 1.5px solid #F0C56E; border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: #7B5800; line-height: 1.8; margin-bottom: 14px; }
 .figure-result-notice.show { display: block; }
@@ -149,51 +130,36 @@ textarea:focus { border-color: var(--primary); }
 .q-label { font-size: 14px; color: var(--primary-dark); font-weight: 700; }
 .q-type-tag { margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
 .q-body { padding: 16px; }
-
-/* ===== 數學式樣式 ===== */
-.q-text {
-  font-size: 16px; line-height: 2.2; color: var(--text);
-  word-break: break-word; overflow-wrap: break-word;
-}
-.q-text .MJX-TEX, .q-answer-content .MJX-TEX { font-size: 1.1em; }
-
+.q-text { font-size: 16px; line-height: 2.4; color: var(--text); word-break: break-word; }
 .q-figure-hint { margin-top: 10px; background: #FEF9E7; border-left: 3px solid #E67E22; padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: 13px; color: #7B5800; line-height: 1.6; }
 .q-answer { margin-top: 14px; background: var(--accent-light); border: 1.5px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 14px; }
 .q-answer-toggle { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--accent); font-weight: 700; padding: 0; display: flex; align-items: center; gap: 8px; font-family: 'Noto Sans TC', sans-serif; width: 100%; min-height: 44px; }
-.q-answer-content { display: none; margin-top: 10px; font-size: 14px; color: #0D7A74; line-height: 2; }
+.q-answer-content { display: none; margin-top: 10px; font-size: 14px; color: #0D7A74; line-height: 2.4; }
 .q-answer-content.show { display: block; }
+.answer-final { margin-top: 10px; font-weight: 700; font-size: 15px; }
 
 .reset-btn { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: var(--radius); padding: 15px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; cursor: pointer; transition: all .18s; margin-top: 6px; min-height: 52px; }
 .reset-btn:active { transform: scale(.98); background: var(--primary-light); }
 
-/* ===== SETUP MODAL ===== */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; align-items: flex-end; justify-content: center; }
-.modal-overlay.show { display: flex; }
-.modal-box { background: white; border-radius: 24px 24px 0 0; padding: 24px 20px calc(24px + var(--safe-bottom)); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
-@keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+/* ===== MODALS ===== */
+.modal-overlay, .history-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; align-items: flex-end; justify-content: center; }
+.modal-overlay.show, .history-overlay.show { display: flex; }
+.modal-box, .history-box { background: white; border-radius: 24px 24px 0 0; padding: 24px 20px calc(24px + var(--safe-bottom)); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
+@keyframes slideUp { from{transform:translateY(100%);}to{transform:translateY(0);} }
 .modal-handle { width: 40px; height: 4px; background: #DDD; border-radius: 4px; margin: 0 auto 20px; }
-.modal-box h3 { font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 900; color: var(--primary); margin-bottom: 16px; }
-.setup-step { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
-.setup-step .ss-num { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-.setup-step .ss-text { font-size: 14px; line-height: 1.7; color: var(--text); }
-.setup-step .ss-text a { color: var(--primary); font-weight: 700; text-decoration: none; }
-.setup-step .ss-text code { background: #F5F5F5; padding: 2px 7px; border-radius: 5px; font-size: 13px; font-family: monospace; }
+.modal-box h3, .history-box h3 { font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 900; color: var(--primary); margin-bottom: 16px; }
+.setup-step { display: flex; gap: 12px; margin-bottom: 16px; }
+.setup-step .ss-num { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.setup-step .ss-text { font-size: 14px; line-height: 1.7; }
+.setup-step a { color: var(--primary); font-weight: 700; text-decoration: none; }
+.setup-step code { background: #F5F5F5; padding: 2px 7px; border-radius: 5px; font-size: 13px; font-family: monospace; }
 .api-input-row { display: flex; gap: 8px; margin-top: 6px; }
-.api-input-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: monospace; outline: none; background: white; color: var(--text); transition: border-color .2s; }
+.api-input-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: monospace; outline: none; transition: border-color .2s; }
 .api-input-row input:focus { border-color: var(--primary); }
-.save-key-btn { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif; cursor: pointer; white-space: nowrap; }
-.save-key-btn:active { background: var(--primary-dark); }
+.save-key-btn { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif; cursor: pointer; }
 .key-status { font-size: 12px; margin-top: 6px; height: 16px; }
-.key-status.ok { color: #27AE60; }
-.key-status.missing { color: #E74C3C; }
+.key-status.ok { color: #27AE60; } .key-status.missing { color: #E74C3C; }
 .modal-close { width: 100%; background: #F5F5F5; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; color: var(--text-muted); cursor: pointer; margin-top: 16px; }
-.modal-close:active { background: #EBEBEB; }
-
-/* ===== HISTORY ===== */
-.history-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; align-items: flex-end; justify-content: center; }
-.history-overlay.show { display: flex; }
-.history-box { background: white; border-radius: 24px 24px 0 0; padding: 20px 18px calc(20px + var(--safe-bottom)); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
-.history-box h3 { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 14px; }
 .history-empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 30px 0; }
 .history-item { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 10px; cursor: pointer; transition: all .15s; }
 .history-item:active { background: var(--primary-light); border-color: var(--primary); }
@@ -204,12 +170,9 @@ textarea:focus { border-color: var(--primary); }
 .hi-summary { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .history-clear { width: 100%; background: none; border: 1.5px solid #FFB5B5; border-radius: 10px; padding: 12px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; color: #C0392B; cursor: pointer; margin-top: 8px; }
 
-/* ===== PRINT ===== */
 .print-header { display: none; }
 @media print {
-  header, .bottom-bar, .card, .error-box, .loading, .reset-btn,
-  .export-btns, .q-answer-toggle, .figure-result-notice,
-  .modal-overlay, .history-overlay { display: none !important; }
+  header,.bottom-bar,.card,.error-box,.loading,.reset-btn,.export-btns,.q-answer-toggle,.figure-result-notice,.modal-overlay,.history-overlay { display: none !important; }
   body { background: white; }
   .main { padding: 10px; max-width: 100%; }
   .result-section { display: block !important; }
@@ -230,8 +193,8 @@ textarea:focus { border-color: var(--primary); }
     <p>國小課輔老師專用</p>
   </div>
   <div class="header-right">
-    <button class="history-btn" onclick="openHistory()" title="出題紀錄">📋</button>
-    <button class="setup-btn" onclick="openSetup()" title="API Key 設定">⚙️</button>
+    <button class="history-btn" onclick="openHistory()">📋</button>
+    <button class="setup-btn" onclick="openSetup()">⚙️</button>
   </div>
 </header>
 
@@ -259,7 +222,7 @@ textarea:focus { border-color: var(--primary); }
         <button class="qtype-btn" data-type="應用題"><span class="qt-icon">📖</span><span class="qt-info"><span class="qt-name">應用題</span><span class="qt-desc">文字情境解題</span></span></button>
         <button class="qtype-btn" data-type="圖形題"><span class="qt-icon">📐</span><span class="qt-info"><span class="qt-name">圖形題</span><span class="qt-desc">幾何、面積、統計</span></span></button>
       </div>
-      <div class="figure-notice" id="figureNotice">📌 <strong>圖形題說明：</strong>AI 會以文字描述圖形，並附上「教師備注」說明需補充的圖形或作圖空間。</div>
+      <div class="figure-notice" id="figureNotice">📌 <strong>圖形題說明：</strong>AI 會以文字描述圖形，並附上「教師備注」。</div>
     </div>
   </div>
 
@@ -273,15 +236,11 @@ textarea:focus { border-color: var(--primary); }
       <div class="media-btns" id="mediaBtns">
         <div class="media-btn">
           <input type="file" id="cameraInput" accept="image/*" capture="environment">
-          <div class="mb-icon">📷</div>
-          <div class="mb-label">拍照</div>
-          <div class="mb-sub">直接開相機</div>
+          <div class="mb-icon">📷</div><div class="mb-label">拍照</div><div class="mb-sub">直接開相機</div>
         </div>
         <div class="media-btn">
           <input type="file" id="galleryInput" accept="image/*">
-          <div class="mb-icon">🖼️</div>
-          <div class="mb-label">從相簿選取</div>
-          <div class="mb-sub">選已有的圖片</div>
+          <div class="mb-icon">🖼️</div><div class="mb-label">從相簿選取</div><div class="mb-sub">選已有的圖片</div>
         </div>
       </div>
       <div class="divider">或 輸入題目文字</div>
@@ -305,7 +264,7 @@ textarea:focus { border-color: var(--primary); }
         <button class="export-btn" id="copyBtn" onclick="copyAll()">📋 複製文字</button>
       </div>
     </div>
-    <div class="figure-result-notice" id="figureResultNotice">⚠️ <strong>圖形題：</strong>題目已用文字描述圖形，請依「教師備注」補充圖形或作圖空間。</div>
+    <div class="figure-result-notice" id="figureResultNotice">⚠️ <strong>圖形題：</strong>請依「教師備注」補充圖形或作圖空間。</div>
     <div class="original-summary" id="originalSummary"></div>
     <div id="questionsContainer"></div>
     <button class="reset-btn" onclick="resetAll()">🔄 重新上傳題目</button>
@@ -316,14 +275,13 @@ textarea:focus { border-color: var(--primary); }
   <button class="generate-btn" id="generateBtn" onclick="generate()">✨ 產生 3 題相似題</button>
 </div>
 
-<!-- SETUP MODAL -->
-<div class="modal-overlay" id="setupModal" onclick="closeSetupIfBg(event)">
+<div class="modal-overlay" id="setupModal" onclick="if(event.target===this)closeSetup()">
   <div class="modal-box">
     <div class="modal-handle"></div>
     <h3>⚙️ API Key 設定</h3>
     <div class="setup-step"><div class="ss-num">1</div><div class="ss-text">前往 <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> 免費申請帳號</div></div>
     <div class="setup-step"><div class="ss-num">2</div><div class="ss-text">登入後點「Create API Key」，複製以 <code>gsk_</code> 開頭的金鑰</div></div>
-    <div class="setup-step"><div class="ss-num">3</div><div class="ss-text">貼到下方並儲存（金鑰只存在您的手機，不會上傳）</div></div>
+    <div class="setup-step"><div class="ss-num">3</div><div class="ss-text">貼到下方並儲存（只存在您的手機，不會上傳）</div></div>
     <div class="api-input-row">
       <input type="password" id="modalApiKey" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
       <button class="save-key-btn" onclick="saveKey()">儲存</button>
@@ -333,8 +291,7 @@ textarea:focus { border-color: var(--primary); }
   </div>
 </div>
 
-<!-- HISTORY PANEL -->
-<div class="history-overlay" id="historyPanel" onclick="closeHistoryIfBg(event)">
+<div class="history-overlay" id="historyPanel" onclick="if(event.target===this)closeHistory()">
   <div class="history-box">
     <div class="modal-handle"></div>
     <h3>📋 出題紀錄</h3>
@@ -358,7 +315,6 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
     selectedGrade = btn.dataset.grade;
   });
 });
-
 document.querySelectorAll('.qtype-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.qtype-btn').forEach(b => b.classList.remove('active'));
@@ -368,22 +324,19 @@ document.querySelectorAll('.qtype-btn').forEach(btn => {
   });
 });
 
-document.getElementById('cameraInput').addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
-document.getElementById('galleryInput').addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
-
+document.getElementById('cameraInput').addEventListener('change', e => { if(e.target.files[0]) processFile(e.target.files[0]); });
+document.getElementById('galleryInput').addEventListener('change', e => { if(e.target.files[0]) processFile(e.target.files[0]); });
 function processFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     const r = e.target.result;
-    imageBase64 = r.split(',')[1];
-    imageType = file.type || 'image/jpeg';
+    imageBase64 = r.split(',')[1]; imageType = file.type || 'image/jpeg';
     document.getElementById('previewImg').src = r;
     document.getElementById('previewWrap').classList.add('show');
     document.getElementById('mediaBtns').style.display = 'none';
   };
   reader.readAsDataURL(file);
 }
-
 document.getElementById('removeImg').addEventListener('click', () => {
   imageBase64 = ''; imageType = '';
   document.getElementById('previewImg').src = '';
@@ -394,11 +347,30 @@ document.getElementById('removeImg').addEventListener('click', () => {
 });
 
 const typeColors = {
-  '計算題': { bg:'#EBF5FB', color:'#2980B9', border:'#AED6F1' },
-  '應用題': { bg:'#EAFAF1', color:'#27AE60', border:'#A9DFBF' },
-  '圖形題': { bg:'#FEF9E7', color:'#E67E22', border:'#F9CA24' },
-  '一般題': { bg:'#F5F5F5', color:'#888', border:'#DDD' },
+  '計算題':{ bg:'#EBF5FB', color:'#2980B9', border:'#AED6F1' },
+  '應用題':{ bg:'#EAFAF1', color:'#27AE60', border:'#A9DFBF' },
+  '圖形題':{ bg:'#FEF9E7', color:'#E67E22', border:'#F9CA24' },
+  '一般題':{ bg:'#F5F5F5', color:'#888', border:'#DDD' },
 };
+
+// ===== 分數渲染：把 [整數,分子,分母] 格式轉成 HTML =====
+// AI 回傳格式約定：純分數用 {分子/分母}，帶分數用 {整數+分子/分母}
+// 例：{3/16}、{5+3/9}
+function renderMath(text) {
+  if (!text) return '';
+  // 帶分數：{整數+分子/分母}
+  text = text.replace(/\{(\d+)\+(\d+)\/(\d+)\}/g, (_, w, n, d) =>
+    `<span class="mixed-num"><span class="mixed-int">${w}</span><span class="frac"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span></span>`
+  );
+  // 純分數：{分子/分母}
+  text = text.replace(/\{(\d+)\/(\d+)\}/g, (_, n, d) =>
+    `<span class="frac"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span>`
+  );
+  // 換行
+  text = text.replace(/\n/g, '<br>');
+  // 跳脫剩餘 HTML（不影響已插入的 span）
+  return text;
+}
 
 function buildSystemPrompt() {
   const typeHint = selectedType === 'auto'
@@ -408,16 +380,17 @@ function buildSystemPrompt() {
 ${typeHint}
 根據老師提供的錯題，出 3 道類似的練習題，難度和考點與原題相同，適合${selectedGrade}學生程度。
 
-【重要】數學式書寫規則：
-- 所有分數必須用 LaTeX 格式：整數帶分數寫成 $整數\\frac{分子}{分母}$，例如 $5\\frac{3}{9}$
-- 純分數寫成 $\\frac{分子}{分母}$，例如 $\\frac{3}{16}$
-- 計算式也用 LaTeX，例如 $5\\frac{3}{9} \\times \\frac{3}{16} - \\frac{21}{25}$
-- 解題步驟中每一行數學式也要用 LaTeX 格式
+【重要】分數書寫規則（必須嚴格遵守）：
+- 純分數寫成 {分子/分母}，例如 {3/16}、{21/25}
+- 帶分數（整數加分數）寫成 {整數+分子/分母}，例如 {5+3/9}、{7+2/5}
+- 帶分數前面絕對不能加「又」字，直接寫 5{3/9} 而不是 5又{3/9}
+- 不要使用任何其他格式（不用 LaTeX、不用 ½ 符號、不用「又」）
+- 解題步驟中的分數也要用這個格式
 
-規則：符合${selectedGrade}課程範圍；數字大小合理，情境貼近生活；每題附清楚解題步驟與答案；不直接複製原題。
+規則：符合${selectedGrade}課程範圍；數字合理；每題附清楚解題步驟與答案；不直接複製原題。
 
-請只回傳以下 JSON，不含其他文字：
-{"originalSummary":"原題摘要","detectedType":"計算題或應用題或圖形題","questions":[{"question":"題目文字（含LaTeX分數）","solution":"解題步驟（含LaTeX）","answer":"答案（含LaTeX）","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""}]}`;
+只回傳以下 JSON，不含其他文字：
+{"originalSummary":"原題摘要","detectedType":"計算題或應用題或圖形題","questions":[{"question":"題目","solution":"解題步驟","answer":"答案","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""}]}`;
 }
 
 async function generate() {
@@ -447,15 +420,14 @@ async function generate() {
 
 async function callVision(apiKey) {
   const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
     body: JSON.stringify({
       model:'meta-llama/llama-4-scout-17b-16e-instruct',
       messages:[
         {role:'system', content:buildSystemPrompt()},
         {role:'user', content:[
           {type:'image_url', image_url:{url:`data:${imageType};base64,${imageBase64}`}},
-          {type:'text', text:`這是一道${selectedGrade}的數學錯題照片，請辨識題目內容並出 3 道相似題，以 JSON 格式回傳。分數請用 LaTeX 格式表示。`}
+          {type:'text', text:`這是一道${selectedGrade}的數學錯題照片，請辨識題目並出 3 道相似題，以 JSON 格式回傳。分數用 {分子/分母} 或 {整數+分子/分母} 格式。`}
         ]}
       ],
       max_tokens:2500, temperature:0.7
@@ -466,13 +438,12 @@ async function callVision(apiKey) {
 
 async function callText(apiKey, questionText) {
   const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
     body: JSON.stringify({
       model:'llama-3.3-70b-versatile',
       messages:[
         {role:'system', content:buildSystemPrompt()},
-        {role:'user', content:`以下是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題，以 JSON 格式回傳。分數請用 LaTeX 格式表示。`}
+        {role:'user', content:`以下是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題，以 JSON 格式回傳。分數用 {分子/分母} 或 {整數+分子/分母} 格式。`}
       ],
       max_tokens:2500, temperature:0.7
     })
@@ -492,7 +463,6 @@ async function parseResp(response) {
   return JSON.parse(m[0]);
 }
 
-// ===== 渲染結果（含 MathJax）=====
 function renderResult(data) {
   const detectedType = data.detectedType || (selectedType !== 'auto' ? selectedType : '一般題');
   const hasFigure = (data.questions||[]).some(q=>q.hasFigure);
@@ -505,7 +475,7 @@ function renderResult(data) {
   document.getElementById('figureResultNotice').classList.toggle('show', hasFigure);
   document.getElementById('printMeta').textContent = `${selectedGrade} ・ ${detectedType} ・ 共 3 題`;
   document.getElementById('originalSummary').innerHTML =
-    `<strong>📌 原題分析</strong>${sanitize(data.originalSummary||'已識別題目，以下為相似練習題')}`;
+    `<strong>📌 原題分析</strong>${renderMath(escText(data.originalSummary||'已識別題目'))}`;
 
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
@@ -513,23 +483,20 @@ function renderResult(data) {
     const card = document.createElement('div');
     card.className = 'question-card';
     const figTag = q.hasFigure ? `<span class="q-type-tag" style="background:${tc.bg};color:${tc.color};">📐 含圖形</span>` : '';
-    const figHint = q.hasFigure && q.figureHint ? `<div class="q-figure-hint">✏️ 教師備注：${sanitize(q.figureHint)}</div>` : '';
-    // 解題步驟換行處理
-    const solutionHtml = sanitize(q.solution||'').replace(/\n/g, '<br>');
+    const figHint = q.hasFigure && q.figureHint ? `<div class="q-figure-hint">✏️ 教師備注：${renderMath(escText(q.figureHint))}</div>` : '';
     card.innerHTML = `
       <div class="q-header">
         <div class="q-num">${i+1}</div>
-        <div class="q-label">第 ${i+1} 題</div>
-        ${figTag}
+        <div class="q-label">第 ${i+1} 題</div>${figTag}
       </div>
       <div class="q-body">
-        <div class="q-text">${sanitize(q.question||'')}</div>
+        <div class="q-text">${renderMath(escText(q.question||''))}</div>
         ${figHint}
         <div class="q-answer">
           <button class="q-answer-toggle" onclick="toggleAns(this)"><span>▶</span> 查看解題過程與答案</button>
           <div class="q-answer-content">
-            <div>${solutionHtml}</div>
-            <div style="margin-top:10px;font-weight:700;">✅ 答案：${sanitize(q.answer||'')}</div>
+            <div>${renderMath(escText(q.solution||''))}</div>
+            <div class="answer-final">✅ 答案：${renderMath(escText(q.answer||''))}</div>
           </div>
         </div>
       </div>`;
@@ -537,35 +504,26 @@ function renderResult(data) {
   });
 
   document.getElementById('resultSection').classList.add('show');
-
-  // 觸發 MathJax 渲染
-  if (window.MathJax && MathJax.typesetPromise) {
-    MathJax.typesetPromise([document.getElementById('questionsContainer'), document.getElementById('originalSummary')])
-      .then(() => {
-        setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'}), 100);
-      });
-  } else {
-    setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'}), 100);
-  }
+  setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth',block:'start'}), 100);
 }
 
-// sanitize：保留 $ LaTeX $，只跳脫 HTML 特殊字元（不跳脫 $ \ { }）
-function sanitize(s) {
+// 先跳脫 HTML，再交給 renderMath 處理 {分數} 標記
+function escText(s) {
   if (!s) return '';
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  // 移除「又」字（帶分數前面常出現的多餘文字）
+  s = s.replace(/又(?=\{[\d+/]+\})/g, '');
+  // 暫存分數標記，跳脫其他 HTML，再還原
+  const fracs = [];
+  s = s.replace(/\{[\d+/]+\}/g, m => { fracs.push(m); return `%%FRAC${fracs.length-1}%%`; });
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/%%FRAC(\d+)%%/g, (_,i) => fracs[parseInt(i)]);
+  return s;
 }
 
 function toggleAns(btn) {
   const c = btn.nextElementSibling;
   c.classList.toggle('show');
   btn.querySelector('span').textContent = c.classList.contains('show') ? '▼' : '▶';
-  // 重新渲染展開的答案
-  if (c.classList.contains('show') && window.MathJax && MathJax.typesetPromise) {
-    MathJax.typesetPromise([c]);
-  }
 }
 
 function printResult() {
@@ -575,24 +533,22 @@ function printResult() {
 
 function copyAll() {
   if (!lastResult) return;
-  let t = `${selectedGrade} 數學練習題\n題型：${lastResult.detectedType||selectedType}\n原題：${lastResult.originalSummary||''}\n\n`;
+  let t = `${selectedGrade} 數學練習題\n題型：${lastResult.detectedType||''}\n原題：${lastResult.originalSummary||''}\n\n`;
   (lastResult.questions||[]).forEach((q,i) => {
-    t += `第 ${i+1} 題\n${q.question}\n\n解題：\n${q.solution}\n答案：${q.answer}\n`;
-    if (q.hasFigure && q.figureHint) t += `教師備注：${q.figureHint}\n`;
-    t += '\n';
+    t += `第 ${i+1} 題\n${q.question}\n\n解題：\n${q.solution}\n答案：${q.answer}\n\n`;
   });
   navigator.clipboard.writeText(t).then(() => {
     const btn = document.getElementById('copyBtn');
     const orig = btn.textContent;
     btn.textContent = '✅ 已複製！';
     setTimeout(() => btn.textContent = orig, 2000);
-  }).catch(() => showError('複製失敗，請手動長按文字複製。'));
+  }).catch(() => showError('複製失敗，請手動長按複製。'));
 }
 
 function showError(msg) {
   const box = document.getElementById('errorBox');
   box.textContent = msg; box.classList.add('show');
-  box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 function resetAll() {
@@ -605,64 +561,58 @@ function resetAll() {
   document.getElementById('cameraInput').value='';
   document.getElementById('galleryInput').value='';
   document.getElementById('questionText').value='';
-  window.scrollTo({top:0, behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ===== SETUP =====
 function openSetup() {
-  document.getElementById('modalApiKey').value = localStorage.getItem('groq_api_key') || '';
+  document.getElementById('modalApiKey').value = localStorage.getItem('groq_api_key')||'';
   updateKeyStatus();
   document.getElementById('setupModal').classList.add('show');
-  document.body.style.overflow = 'hidden';
+  document.body.style.overflow='hidden';
 }
-function closeSetup() { document.getElementById('setupModal').classList.remove('show'); document.body.style.overflow = ''; }
-function closeSetupIfBg(e) { if (e.target === document.getElementById('setupModal')) closeSetup(); }
+function closeSetup() { document.getElementById('setupModal').classList.remove('show'); document.body.style.overflow=''; }
 function saveKey() {
   const key = document.getElementById('modalApiKey').value.trim();
   if (key) { localStorage.setItem('groq_api_key', key); updateKeyStatus(); setTimeout(closeSetup, 800); }
 }
 function updateKeyStatus() {
-  const key = localStorage.getItem('groq_api_key') || '';
+  const key = localStorage.getItem('groq_api_key')||'';
   const el = document.getElementById('keyStatus');
-  el.textContent = (key && key.startsWith('gsk_')) ? '✅ API Key 已設定' : '⚠️ 尚未設定 API Key';
-  el.className = 'key-status ' + ((key && key.startsWith('gsk_')) ? 'ok' : 'missing');
+  const ok = key && key.startsWith('gsk_');
+  el.textContent = ok ? '✅ API Key 已設定' : '⚠️ 尚未設定 API Key';
+  el.className = 'key-status ' + (ok ? 'ok' : 'missing');
 }
 
-// ===== HISTORY =====
 function saveHistory(result) {
   try {
-    const history = JSON.parse(localStorage.getItem('math_history') || '[]');
-    history.unshift({ grade:selectedGrade, type:result.detectedType||selectedType, summary:result.originalSummary||'', questions:result.questions, time:new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) });
-    localStorage.setItem('math_history', JSON.stringify(history.slice(0,20)));
+    const h = JSON.parse(localStorage.getItem('math_history')||'[]');
+    h.unshift({ grade:selectedGrade, type:result.detectedType||selectedType, summary:result.originalSummary||'', questions:result.questions, time:new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) });
+    localStorage.setItem('math_history', JSON.stringify(h.slice(0,20)));
   } catch(e) {}
 }
 function openHistory() { renderHistoryList(); document.getElementById('historyPanel').classList.add('show'); document.body.style.overflow='hidden'; }
 function closeHistory() { document.getElementById('historyPanel').classList.remove('show'); document.body.style.overflow=''; }
-function closeHistoryIfBg(e) { if (e.target===document.getElementById('historyPanel')) closeHistory(); }
 function renderHistoryList() {
-  const history = JSON.parse(localStorage.getItem('math_history') || '[]');
+  const h = JSON.parse(localStorage.getItem('math_history')||'[]');
   const list = document.getElementById('historyList');
-  if (!history.length) { list.innerHTML = '<div class="history-empty">📭 還沒有出題紀錄</div>'; return; }
-  list.innerHTML = history.map((h,i) => {
-    const c = typeColors[h.type] || typeColors['一般題'];
-    return `<div class="history-item" onclick="loadHistory(${i})"><div class="hi-meta"><span class="hi-grade">${h.grade}</span><span class="hi-type" style="background:${c.bg};color:${c.color};">${h.type}</span><span class="hi-time">${h.time}</span></div><div class="hi-summary">${h.summary||'點擊查看題目'}</div></div>`;
+  if (!h.length) { list.innerHTML='<div class="history-empty">📭 還沒有出題紀錄</div>'; return; }
+  list.innerHTML = h.map((item,i) => {
+    const c = typeColors[item.type]||typeColors['一般題'];
+    return `<div class="history-item" onclick="loadHistory(${i})"><div class="hi-meta"><span class="hi-grade">${item.grade}</span><span class="hi-type" style="background:${c.bg};color:${c.color};">${item.type}</span><span class="hi-time">${item.time}</span></div><div class="hi-summary">${item.summary||'點擊查看'}</div></div>`;
   }).join('');
 }
-function loadHistory(index) {
-  const history = JSON.parse(localStorage.getItem('math_history') || '[]');
-  const item = history[index];
-  if (!item) return;
-  selectedGrade = item.grade;
-  document.querySelectorAll('.grade-btn').forEach(b => b.classList.toggle('active', b.dataset.grade===item.grade));
-  lastResult = { detectedType:item.type, originalSummary:item.summary, questions:item.questions };
-  closeHistory();
-  renderResult(lastResult);
+function loadHistory(i) {
+  const h = JSON.parse(localStorage.getItem('math_history')||'[]');
+  if (!h[i]) return;
+  selectedGrade = h[i].grade;
+  document.querySelectorAll('.grade-btn').forEach(b => b.classList.toggle('active', b.dataset.grade===h[i].grade));
+  lastResult = { detectedType:h[i].type, originalSummary:h[i].summary, questions:h[i].questions };
+  closeHistory(); renderResult(lastResult);
 }
 function clearHistory() {
-  if (confirm('確定要清除所有出題紀錄嗎？')) { localStorage.removeItem('math_history'); renderHistoryList(); }
+  if (confirm('確定清除所有紀錄？')) { localStorage.removeItem('math_history'); renderHistoryList(); }
 }
 
-// Init
 updateKeyStatus();
 if (!localStorage.getItem('groq_api_key')) setTimeout(openSetup, 600);
 </script>
