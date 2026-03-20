@@ -182,17 +182,11 @@ textarea:focus { border-color: var(--primary); }
 .po-desc { font-size: 12px; color: var(--text-muted); }
 
 .print-header { display: none; }
+
+/* 列印媒體查詢：隱藏非列印區域 */
 @media print {
-  header,.bottom-bar,.card,.error-box,.loading,.reset-btn,.export-btns,.q-answer-toggle,.figure-result-notice,.modal-overlay,.history-overlay { display: none !important; }
-  body { background: white; }
-  .main { padding: 10px; max-width: 100%; }
-  .result-section { display: block !important; }
-  .question-card { break-inside: avoid; border: 1px solid #DDD; margin-bottom: 16px; }
-  .result-topbar { display: none !important; }
-  .print-header { display: block !important; text-align: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #FF6B35; }
-  .q-answer { display: none !important; }
-  .q-answer.show-in-print { display: block !important; border: 1px solid #CCC !important; background: #F9FFF9 !important; }
-  .q-answer.show-in-print .q-answer-content { display: block !important; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
 }
 </style>
 </head>
@@ -211,6 +205,7 @@ textarea:focus { border-color: var(--primary); }
 </header>
 
 <div class="main">
+  <!-- 第一步：選擇年級 -->
   <div class="card">
     <div class="card-header"><div class="step">1</div><h2>選擇年級</h2></div>
     <div class="card-body">
@@ -225,6 +220,7 @@ textarea:focus { border-color: var(--primary); }
     </div>
   </div>
 
+  <!-- 第二步：題型 -->
   <div class="card">
     <div class="card-header"><div class="step">2</div><h2>題型</h2></div>
     <div class="card-body">
@@ -238,6 +234,7 @@ textarea:focus { border-color: var(--primary); }
     </div>
   </div>
 
+  <!-- 第三步：上傳錯題 -->
   <div class="card">
     <div class="card-header"><div class="step">3</div><h2>上傳錯題</h2></div>
     <div class="card-body">
@@ -263,8 +260,8 @@ textarea:focus { border-color: var(--primary); }
   <div class="error-box" id="errorBox"></div>
   <div class="loading" id="loading"><div class="dots"><span></span><span></span><span></span></div><p>AI 正在出題中，請稍候⋯</p></div>
 
+  <!-- 結果展示區域 -->
   <div class="result-section" id="resultSection">
-    <div class="print-header"><h2 style="font-size:20px;font-weight:700;color:#FF6B35;margin-bottom:6px;">數學練習題</h2><p id="printMeta" style="font-size:14px;color:#888;"></p></div>
     <div class="result-topbar">
       <div class="result-title">
         <h2>📝 相似題</h2>
@@ -287,20 +284,22 @@ textarea:focus { border-color: var(--primary); }
   <button class="generate-btn" id="generateBtn" onclick="generate()">✨ 產生 3 題相似題</button>
 </div>
 
-<!-- PRINT MENU -->
+<!-- PRINT MENU MODAL -->
 <div class="modal-overlay" id="printMenu" onclick="if(event.target===this)closePrintMenu()">
   <div class="modal-box">
     <div class="modal-handle"></div>
     <h3>🖨️ 選擇列印內容</h3>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
-      <button class="print-option-btn" onclick="doPrint(true)">
+      <!-- 只有題目傳入 false -->
+      <button class="print-option-btn" onclick="doPrint(false)">
         <div class="po-icon">📝</div>
         <div class="po-info">
           <div class="po-title">只有題目</div>
           <div class="po-desc">適合印給學生練習，不含解答</div>
         </div>
       </button>
-      <button class="print-option-btn" onclick="doPrint(false)">
+      <!-- 題目+解答傳入 true -->
+      <button class="print-option-btn" onclick="doPrint(true)">
         <div class="po-icon">📋</div>
         <div class="po-info">
           <div class="po-title">題目 + 解答</div>
@@ -312,6 +311,7 @@ textarea:focus { border-color: var(--primary); }
   </div>
 </div>
 
+<!-- API SETUP MODAL -->
 <div class="modal-overlay" id="setupModal" onclick="if(event.target===this)closeSetup()">
   <div class="modal-box">
     <div class="modal-handle"></div>
@@ -328,6 +328,7 @@ textarea:focus { border-color: var(--primary); }
   </div>
 </div>
 
+<!-- HISTORY OVERLAY -->
 <div class="history-overlay" id="historyPanel" onclick="if(event.target===this)closeHistory()">
   <div class="history-box">
     <div class="modal-handle"></div>
@@ -345,6 +346,7 @@ let imageBase64 = '';
 let imageType = '';
 let lastResult = null;
 
+// UI 交互
 document.querySelectorAll('.grade-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
@@ -361,6 +363,7 @@ document.querySelectorAll('.qtype-btn').forEach(btn => {
   });
 });
 
+// 檔案處理
 document.getElementById('cameraInput').addEventListener('change', e => { if(e.target.files[0]) processFile(e.target.files[0]); });
 document.getElementById('galleryInput').addEventListener('change', e => { if(e.target.files[0]) processFile(e.target.files[0]); });
 function processFile(file) {
@@ -390,53 +393,33 @@ const typeColors = {
   '一般題':{ bg:'#F5F5F5', color:'#888', border:'#DDD' },
 };
 
-// ===== 分數渲染：把 [整數,分子,分母] 格式轉成 HTML =====
-// AI 回傳格式約定：純分數用 {分子/分母}，帶分數用 {整數+分子/分母}
-// 例：{3/16}、{5+3/9}
+// 分數渲染
 function renderMath(text) {
   if (!text) return '';
-  // 帶分數：{整數+分子/分母}
   text = text.replace(/\{(\d+)\+(\d+)\/(\d+)\}/g, (_, w, n, d) =>
     `<span class="mixed-num"><span class="mixed-int">${w}</span><span class="frac"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span></span>`
   );
-  // 純分數：{分子/分母}
   text = text.replace(/\{(\d+)\/(\d+)\}/g, (_, n, d) =>
     `<span class="frac"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span>`
   );
-  // 換行
   text = text.replace(/\n/g, '<br>');
-  // 跳脫剩餘 HTML（不影響已插入的 span）
   return text;
 }
 
 function buildSystemPrompt() {
-  const typeHint = selectedType === 'auto'
-    ? '請自動判斷題型（計算題、應用題或圖形題）。'
-    : `這是一道【${selectedType}】。`;
-  return `你是一位專業的國小數學老師，擅長為學生出相似練習題。
-${typeHint}
-根據老師提供的錯題，出 3 道類似的練習題，難度和考點與原題相同，適合${selectedGrade}學生程度。
-
-【重要】分數書寫規則（必須嚴格遵守）：
-- 純分數寫成 {分子/分母}，例如 {3/16}、{21/25}
-- 帶分數（整數加分數）寫成 {整數+分子/分母}，例如 {5+3/9}、{7+2/5}
-- 帶分數前面絕對不能加「又」字，直接寫 5{3/9} 而不是 5又{3/9}
-- 不要使用任何其他格式（不用 LaTeX、不用 ½ 符號、不用「又」）
-- 解題步驟中的分數也要用這個格式
-
-規則：符合${selectedGrade}課程範圍；數字合理；每題附清楚解題步驟與答案；不直接複製原題。
-
-只回傳以下 JSON，不含其他文字：
-{"originalSummary":"原題摘要","detectedType":"計算題或應用題或圖形題","questions":[{"question":"題目","solution":"解題步驟","answer":"答案","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""}]}`;
+  const typeHint = selectedType === 'auto' ? '請自動判斷題型。' : `這是一道【${selectedType}】。`;
+  return `你是一位專業的國小數學老師。根據老師提供的錯題，出 3 道類似的練習題。
+分數書寫規則：純分數 {分子/分母}，帶分數 {整數+分子/分母}。只回傳 JSON 格式。
+{"originalSummary":"原題摘要","detectedType":"題型","questions":[{"question":"題目","solution":"步驟","answer":"答案","hasFigure":false,"figureHint":""}]}`;
 }
 
 async function generate() {
   const apiKey = localStorage.getItem('groq_api_key') || '';
   const questionText = document.getElementById('questionText').value.trim();
   document.getElementById('errorBox').classList.remove('show');
-  if (!apiKey) { showError('請先點右上角 ⚙️ 設定 API Key。'); return; }
-  if (!selectedGrade) { showError('請選擇學生年級。'); return; }
-  if (!imageBase64 && !questionText) { showError('請拍照或輸入題目文字。'); return; }
+  if (!apiKey) { showError('請先設定 API Key。'); return; }
+  if (!selectedGrade) { showError('請選擇年級。'); return; }
+  if (!imageBase64 && !questionText) { showError('請提供題目內容。'); return; }
 
   document.getElementById('generateBtn').disabled = true;
   document.getElementById('loading').classList.add('show');
@@ -448,7 +431,7 @@ async function generate() {
     saveHistory(result);
     renderResult(result);
   } catch(err) {
-    showError('出題失敗：' + err.message + '\n\n請確認 API Key 正確，以及網路連線正常。');
+    showError('出題失敗：' + err.message);
   } finally {
     document.getElementById('generateBtn').disabled = false;
     document.getElementById('loading').classList.remove('show');
@@ -464,7 +447,7 @@ async function callVision(apiKey) {
         {role:'system', content:buildSystemPrompt()},
         {role:'user', content:[
           {type:'image_url', image_url:{url:`data:${imageType};base64,${imageBase64}`}},
-          {type:'text', text:`這是一道${selectedGrade}的數學錯題照片，請辨識題目並出 3 道相似題，以 JSON 格式回傳。分數用 {分子/分母} 或 {整數+分子/分母} 格式。`}
+          {type:'text', text:`出 3 道相似題。`}
         ]}
       ],
       max_tokens:2500, temperature:0.7
@@ -480,7 +463,7 @@ async function callText(apiKey, questionText) {
       model:'llama-3.3-70b-versatile',
       messages:[
         {role:'system', content:buildSystemPrompt()},
-        {role:'user', content:`以下是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題，以 JSON 格式回傳。分數用 {分子/分母} 或 {整數+分子/分母} 格式。`}
+        {role:'user', content:`錯題：${questionText}`}
       ],
       max_tokens:2500, temperature:0.7
     })
@@ -489,48 +472,37 @@ async function callText(apiKey, questionText) {
 }
 
 async function parseResp(response) {
-  if (!response.ok) {
-    const err = await response.json().catch(()=>({}));
-    throw new Error(err.error?.message || `HTTP ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || '';
   const m = content.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error('AI 回傳格式有誤，請再試一次。');
+  if (!m) throw new Error('AI 回傳格式有誤');
   return JSON.parse(m[0]);
 }
 
 function renderResult(data) {
   const detectedType = data.detectedType || (selectedType !== 'auto' ? selectedType : '一般題');
-  const hasFigure = (data.questions||[]).some(q=>q.hasFigure);
   const tc = typeColors[detectedType] || typeColors['一般題'];
 
   document.getElementById('gradeBadge').textContent = selectedGrade;
   const qb = document.getElementById('qtypeBadge');
   qb.textContent = detectedType;
   qb.style.cssText = `background:${tc.bg};color:${tc.color};border:1px solid ${tc.border};`;
-  document.getElementById('figureResultNotice').classList.toggle('show', hasFigure);
-  document.getElementById('printMeta').textContent = `${selectedGrade} ・ ${detectedType} ・ 共 3 題`;
-  document.getElementById('originalSummary').innerHTML =
-    `<strong>📌 原題分析</strong>${renderMath(escText(data.originalSummary||'已識別題目'))}`;
+  document.getElementById('figureResultNotice').classList.toggle('show', (data.questions||[]).some(q=>q.hasFigure));
+  document.getElementById('originalSummary').innerHTML = `<strong>📌 原題分析</strong>${renderMath(escText(data.originalSummary||''))}`;
 
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
   (data.questions||[]).forEach((q,i) => {
     const card = document.createElement('div');
     card.className = 'question-card';
-    const figTag = q.hasFigure ? `<span class="q-type-tag" style="background:${tc.bg};color:${tc.color};">📐 含圖形</span>` : '';
-    const figHint = q.hasFigure && q.figureHint ? `<div class="q-figure-hint">✏️ 教師備注：${renderMath(escText(q.figureHint))}</div>` : '';
     card.innerHTML = `
-      <div class="q-header">
-        <div class="q-num">${i+1}</div>
-        <div class="q-label">第 ${i+1} 題</div>${figTag}
-      </div>
+      <div class="q-header"><div class="q-num">${i+1}</div><div class="q-label">第 ${i+1} 題</div></div>
       <div class="q-body">
         <div class="q-text">${renderMath(escText(q.question||''))}</div>
-        ${figHint}
+        ${q.hasFigure ? `<div class="q-figure-hint">✏️ 教師備注：${renderMath(escText(q.figureHint))}</div>` : ''}
         <div class="q-answer">
-          <button class="q-answer-toggle" onclick="toggleAns(this)"><span>▶</span> 查看解題過程與答案</button>
+          <button class="q-answer-toggle" onclick="toggleAns(this)"><span>▶</span> 查看解答</button>
           <div class="q-answer-content">
             <div>${renderMath(escText(q.solution||''))}</div>
             <div class="answer-final">✅ 答案：${renderMath(escText(q.answer||''))}</div>
@@ -539,17 +511,13 @@ function renderResult(data) {
       </div>`;
     container.appendChild(card);
   });
-
   document.getElementById('resultSection').classList.add('show');
   setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth',block:'start'}), 100);
 }
 
-// 先跳脫 HTML，再交給 renderMath 處理 {分數} 標記
 function escText(s) {
   if (!s) return '';
-  // 移除「又」字（帶分數前面常出現的多餘文字）
   s = s.replace(/又(?=\{[\d+/]+\})/g, '');
-  // 暫存分數標記，跳脫其他 HTML，再還原
   const fracs = [];
   s = s.replace(/\{[\d+/]+\}/g, m => { fracs.push(m); return `%%FRAC${fracs.length-1}%%`; });
   s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -563,68 +531,88 @@ function toggleAns(btn) {
   btn.querySelector('span').textContent = c.classList.contains('show') ? '▼' : '▶';
 }
 
-let printWithAnswers = true;
-
+// ===== 列印相關邏輯 =====
 function openPrintMenu() { document.getElementById('printMenu').classList.add('show'); document.body.style.overflow='hidden'; }
 function closePrintMenu() { document.getElementById('printMenu').classList.remove('show'); document.body.style.overflow=''; }
 
+/**
+ * 執行列印
+ * @param {boolean} withAnswers 是否包含解答
+ */
 function doPrint(withAnswers) {
   closePrintMenu();
-  const meta = document.getElementById('printMeta');
-  const base = meta.dataset.base || meta.textContent;
-  meta.dataset.base = base;
-  meta.textContent = base + (withAnswers ? '' : '（練習用，不含解答）');
+  if (!lastResult) return;
 
-  // 每個解答區直接加/移除 class
-  document.querySelectorAll('.q-answer').forEach(el => {
-    el.classList.toggle('show-in-print', withAnswers);
-    if (withAnswers) el.querySelector('.q-answer-content').classList.add('show');
-  });
+  const questions = lastResult.questions || [];
+  const questionsHtml = questions.map((q, i) => {
+    const qText = renderMath(escText(q.question || ''));
+    // 如果 withAnswers 為 true，則生成解答區塊，否則為空字串
+    const answerBlock = withAnswers ? `
+      <div style="background:#F0FAFA;border-top:1px solid #B2EBE8;padding:14px 16px;font-size:14px;color:#0D7A74;line-height:2.2;">
+        <div>${renderMath(escText(q.solution || '')).replace(/\n/g,'<br>')}</div>
+        <div style="margin-top:10px;font-weight:700;font-size:15px;">✅ 答案：${renderMath(escText(q.answer || ''))}</div>
+      </div>` : '';
 
+    return `
+      <div style="border:1px solid #DDD;border-radius:12px;margin-bottom:20px;overflow:hidden;page-break-inside:avoid;">
+        <div style="background:#FFF0EB;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #FFE0D0;">
+          <span style="width:26px;height:26px;background:#FF6B35;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;">${i+1}</span>
+          <span style="font-size:13px;color:#D94F1E;font-weight:700;">第 ${i+1} 題</span>
+        </div>
+        <div style="font-size:16px;line-height:2.4;padding:16px;word-break:break-word;">${qText}</div>
+        ${answerBlock}
+      </div>`;
+  }).join('');
+
+  // 建立/更新列印區域
+  let area = document.getElementById('printArea');
+  if (!area) {
+    area = document.createElement('div');
+    area.id = 'printArea';
+    document.body.appendChild(area);
+  }
+
+  area.style.cssText = 'display:none; font-family:Noto Sans TC,sans-serif; max-width:800px; margin:0 auto; padding:30px; color:#2D2D2D;';
+  area.innerHTML = `
+    <div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid #FF6B35;">
+      <div style="font-size:22px;font-weight:700;color:#FF6B35;margin-bottom:6px;">數學練習題</div>
+      <div style="font-size:13px;color:#888;">${selectedGrade} ・ ${lastResult.detectedType || ''} ・ 共 3 題 ${withAnswers ? '(含解答)' : '(不含解答)'}</div>
+    </div>
+    <div style="background:#F5F5F5;border-left:4px solid #FF6B35;padding:10px 14px;margin-bottom:20px;font-size:13px;color:#666;line-height:1.8;border-radius:0 8px 8px 0;">
+      <strong style="color:#FF6B35;display:block;font-size:11px;margin-bottom:2px;">📌 原題分析</strong>
+      ${renderMath(escText(lastResult.originalSummary || ''))}
+    </div>
+    ${questionsHtml}`;
+
+  // 延遲一下確保內容渲染後再開列印視窗
   setTimeout(() => {
     window.print();
-    setTimeout(() => {
-      document.querySelectorAll('.q-answer').forEach(el => {
-        el.classList.remove('show-in-print');
-      });
-      meta.textContent = base;
-    }, 500);
-  }, 150);
+  }, 50);
 }
 
 function copyAll() {
   if (!lastResult) return;
-  let t = `${selectedGrade} 數學練習題\n題型：${lastResult.detectedType||''}\n原題：${lastResult.originalSummary||''}\n\n`;
+  let t = `${selectedGrade} 數學練習題\n\n`;
   (lastResult.questions||[]).forEach((q,i) => {
-    t += `第 ${i+1} 題\n${q.question}\n\n解題：\n${q.solution}\n答案：${q.answer}\n\n`;
+    t += `第 ${i+1} 題\n${q.question}\n\n答案：${q.answer}\n\n`;
   });
   navigator.clipboard.writeText(t).then(() => {
     const btn = document.getElementById('copyBtn');
-    const orig = btn.textContent;
     btn.textContent = '✅ 已複製！';
-    setTimeout(() => btn.textContent = orig, 2000);
-  }).catch(() => showError('複製失敗，請手動長按複製。'));
+    setTimeout(() => btn.textContent = '📋 複製文字', 2000);
+  });
 }
 
 function showError(msg) {
   const box = document.getElementById('errorBox');
   box.textContent = msg; box.classList.add('show');
-  box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 function resetAll() {
-  document.getElementById('resultSection').classList.remove('show');
-  document.getElementById('errorBox').classList.remove('show');
-  imageBase64=''; imageType=''; lastResult=null;
-  document.getElementById('previewImg').src='';
-  document.getElementById('previewWrap').classList.remove('show');
-  document.getElementById('mediaBtns').style.display='';
-  document.getElementById('cameraInput').value='';
-  document.getElementById('galleryInput').value='';
-  document.getElementById('questionText').value='';
-  window.scrollTo({top:0,behavior:'smooth'});
+  location.reload();
 }
 
+// 設定與歷史紀錄
 function openSetup() {
   document.getElementById('modalApiKey').value = localStorage.getItem('groq_api_key')||'';
   updateKeyStatus();
@@ -634,7 +622,7 @@ function openSetup() {
 function closeSetup() { document.getElementById('setupModal').classList.remove('show'); document.body.style.overflow=''; }
 function saveKey() {
   const key = document.getElementById('modalApiKey').value.trim();
-  if (key) { localStorage.setItem('groq_api_key', key); updateKeyStatus(); setTimeout(closeSetup, 800); }
+  if (key) { localStorage.setItem('groq_api_key', key); updateKeyStatus(); setTimeout(closeSetup, 500); }
 }
 function updateKeyStatus() {
   const key = localStorage.getItem('groq_api_key')||'';
@@ -645,37 +633,27 @@ function updateKeyStatus() {
 }
 
 function saveHistory(result) {
-  try {
-    const h = JSON.parse(localStorage.getItem('math_history')||'[]');
-    h.unshift({ grade:selectedGrade, type:result.detectedType||selectedType, summary:result.originalSummary||'', questions:result.questions, time:new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) });
-    localStorage.setItem('math_history', JSON.stringify(h.slice(0,20)));
-  } catch(e) {}
+  const h = JSON.parse(localStorage.getItem('math_history')||'[]');
+  h.unshift({ grade:selectedGrade, type:result.detectedType, summary:result.originalSummary, questions:result.questions, time:new Date().toLocaleString() });
+  localStorage.setItem('math_history', JSON.stringify(h.slice(0,20)));
 }
-function openHistory() { renderHistoryList(); document.getElementById('historyPanel').classList.add('show'); document.body.style.overflow='hidden'; }
-function closeHistory() { document.getElementById('historyPanel').classList.remove('show'); document.body.style.overflow=''; }
+function openHistory() { renderHistoryList(); document.getElementById('historyPanel').classList.add('show'); }
+function closeHistory() { document.getElementById('historyPanel').classList.remove('show'); }
 function renderHistoryList() {
   const h = JSON.parse(localStorage.getItem('math_history')||'[]');
   const list = document.getElementById('historyList');
-  if (!h.length) { list.innerHTML='<div class="history-empty">📭 還沒有出題紀錄</div>'; return; }
-  list.innerHTML = h.map((item,i) => {
-    const c = typeColors[item.type]||typeColors['一般題'];
-    return `<div class="history-item" onclick="loadHistory(${i})"><div class="hi-meta"><span class="hi-grade">${item.grade}</span><span class="hi-type" style="background:${c.bg};color:${c.color};">${item.type}</span><span class="hi-time">${item.time}</span></div><div class="hi-summary">${item.summary||'點擊查看'}</div></div>`;
-  }).join('');
+  if (!h.length) { list.innerHTML='<div class="history-empty">📭 沒有紀錄</div>'; return; }
+  list.innerHTML = h.map((item,i) => `<div class="history-item" onclick="loadHistory(${i})"><div>${item.grade} - ${item.time}</div><div class="hi-summary">${item.summary}</div></div>`).join('');
 }
 function loadHistory(i) {
   const h = JSON.parse(localStorage.getItem('math_history')||'[]');
-  if (!h[i]) return;
   selectedGrade = h[i].grade;
-  document.querySelectorAll('.grade-btn').forEach(b => b.classList.toggle('active', b.dataset.grade===h[i].grade));
   lastResult = { detectedType:h[i].type, originalSummary:h[i].summary, questions:h[i].questions };
   closeHistory(); renderResult(lastResult);
 }
-function clearHistory() {
-  if (confirm('確定清除所有紀錄？')) { localStorage.removeItem('math_history'); renderHistoryList(); }
-}
+function clearHistory() { if(confirm('確定清除？')) { localStorage.removeItem('math_history'); renderHistoryList(); } }
 
 updateKeyStatus();
-if (!localStorage.getItem('groq_api_key')) setTimeout(openSetup, 600);
 </script>
 </body>
 </html>
