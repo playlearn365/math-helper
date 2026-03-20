@@ -190,11 +190,9 @@ textarea:focus { border-color: var(--primary); }
   .question-card { break-inside: avoid; border: 1px solid #DDD; margin-bottom: 16px; }
   .result-topbar { display: none !important; }
   .print-header { display: block !important; text-align: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #FF6B35; }
-  /* 含解答模式 */
-  body.print-with-answers .q-answer { display: block !important; border: 1px solid #CCC; background: #F9FFF9; }
-  body.print-with-answers .q-answer-content { display: block !important; }
-  /* 只有題目模式 */
-  body.print-no-answers .q-answer { display: none !important; }
+  .q-answer { display: none !important; }
+  .q-answer.show-in-print { display: block !important; border: 1px solid #CCC !important; background: #F9FFF9 !important; }
+  .q-answer.show-in-print .q-answer-content { display: block !important; }
 }
 </style>
 </head>
@@ -572,21 +570,26 @@ function closePrintMenu() { document.getElementById('printMenu').classList.remov
 
 function doPrint(withAnswers) {
   closePrintMenu();
-  // 更新列印標題
   const meta = document.getElementById('printMeta');
   const base = meta.dataset.base || meta.textContent;
   meta.dataset.base = base;
   meta.textContent = base + (withAnswers ? '' : '（練習用，不含解答）');
-  // 用 body class 控制列印樣式
-  document.body.classList.remove('print-with-answers','print-no-answers');
-  document.body.classList.add(withAnswers ? 'print-with-answers' : 'print-no-answers');
+
+  // 每個解答區直接加/移除 class
+  document.querySelectorAll('.q-answer').forEach(el => {
+    el.classList.toggle('show-in-print', withAnswers);
+    if (withAnswers) el.querySelector('.q-answer-content').classList.add('show');
+  });
+
   setTimeout(() => {
     window.print();
     setTimeout(() => {
-      document.body.classList.remove('print-with-answers','print-no-answers');
+      document.querySelectorAll('.q-answer').forEach(el => {
+        el.classList.remove('show-in-print');
+      });
       meta.textContent = base;
     }, 500);
-  }, 100);
+  }, 150);
 }
 
 function copyAll() {
