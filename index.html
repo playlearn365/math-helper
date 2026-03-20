@@ -170,6 +170,17 @@ textarea:focus { border-color: var(--primary); }
 .hi-summary { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .history-clear { width: 100%; background: none; border: 1.5px solid #FFB5B5; border-radius: 10px; padding: 12px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; color: #C0392B; cursor: pointer; margin-top: 8px; }
 
+.print-option-btn {
+  width: 100%; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.print-option-btn:hover, .print-option-btn:active { border-color: var(--primary); background: var(--primary-light); }
+.po-icon { font-size: 28px; flex-shrink: 0; }
+.po-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.po-desc { font-size: 12px; color: var(--text-muted); }
+
 .print-header { display: none; }
 @media print {
   header,.bottom-bar,.card,.error-box,.loading,.reset-btn,.export-btns,.q-answer-toggle,.figure-result-notice,.modal-overlay,.history-overlay { display: none !important; }
@@ -181,6 +192,8 @@ textarea:focus { border-color: var(--primary); }
   .question-card { break-inside: avoid; border: 1px solid #DDD; margin-bottom: 16px; }
   .result-topbar { display: none !important; }
   .print-header { display: block !important; text-align: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #FF6B35; }
+  /* 若 .q-answer 被設為 display:none，列印時也維持隱藏 */
+  .q-answer[style*="display: none"] { display: none !important; }
 }
 </style>
 </head>
@@ -260,7 +273,7 @@ textarea:focus { border-color: var(--primary); }
         <span class="qtype-badge" id="qtypeBadge"></span>
       </div>
       <div class="export-btns">
-        <button class="export-btn print-btn" onclick="printResult()">🖨️ 列印／PDF</button>
+        <button class="export-btn print-btn" onclick="openPrintMenu()">🖨️ 列印／PDF</button>
         <button class="export-btn" id="copyBtn" onclick="copyAll()">📋 複製文字</button>
       </div>
     </div>
@@ -273,6 +286,31 @@ textarea:focus { border-color: var(--primary); }
 
 <div class="bottom-bar">
   <button class="generate-btn" id="generateBtn" onclick="generate()">✨ 產生 3 題相似題</button>
+</div>
+
+<!-- PRINT MENU -->
+<div class="modal-overlay" id="printMenu" onclick="if(event.target===this)closePrintMenu()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <h3>🖨️ 選擇列印內容</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+      <button class="print-option-btn" onclick="doPrint(true)">
+        <div class="po-icon">📝</div>
+        <div class="po-info">
+          <div class="po-title">只有題目</div>
+          <div class="po-desc">適合印給學生練習，不含解答</div>
+        </div>
+      </button>
+      <button class="print-option-btn" onclick="doPrint(false)">
+        <div class="po-icon">📋</div>
+        <div class="po-info">
+          <div class="po-title">題目 + 解答</div>
+          <div class="po-desc">含解題過程與答案，適合老師參考</div>
+        </div>
+      </button>
+    </div>
+    <button class="modal-close" onclick="closePrintMenu()">取消</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="setupModal" onclick="if(event.target===this)closeSetup()">
@@ -526,9 +564,31 @@ function toggleAns(btn) {
   btn.querySelector('span').textContent = c.classList.contains('show') ? '▼' : '▶';
 }
 
-function printResult() {
-  document.querySelectorAll('.q-answer-content').forEach(el => el.classList.add('show'));
-  window.print();
+let printWithAnswers = true;
+
+function openPrintMenu() { document.getElementById('printMenu').classList.add('show'); document.body.style.overflow='hidden'; }
+function closePrintMenu() { document.getElementById('printMenu').classList.remove('show'); document.body.style.overflow=''; }
+
+function doPrint(withAnswers) {
+  printWithAnswers = withAnswers;
+  closePrintMenu();
+  // 展開或收合解答
+  document.querySelectorAll('.q-answer').forEach(el => {
+    el.style.display = withAnswers ? '' : 'none';
+  });
+  // 更新列印標題
+  const meta = document.getElementById('printMeta');
+  const base = meta.dataset.base || meta.textContent;
+  meta.dataset.base = base;
+  meta.textContent = base + (withAnswers ? '' : '（練習用，不含解答）');
+  setTimeout(() => {
+    window.print();
+    // 列印後恢復
+    setTimeout(() => {
+      document.querySelectorAll('.q-answer').forEach(el => el.style.display = '');
+      meta.textContent = base;
+    }, 500);
+  }, 100);
 }
 
 function copyAll() {
