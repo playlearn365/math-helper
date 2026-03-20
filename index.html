@@ -187,13 +187,14 @@ textarea:focus { border-color: var(--primary); }
   body { background: white; }
   .main { padding: 10px; max-width: 100%; }
   .result-section { display: block !important; }
-  .q-answer-content { display: block !important; }
-  .q-answer { border: 1px solid #CCC; background: #F9FFF9; }
   .question-card { break-inside: avoid; border: 1px solid #DDD; margin-bottom: 16px; }
   .result-topbar { display: none !important; }
   .print-header { display: block !important; text-align: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #FF6B35; }
-  /* 若 .q-answer 被設為 display:none，列印時也維持隱藏 */
-  .q-answer[style*="display: none"] { display: none !important; }
+  /* 含解答模式 */
+  body.print-with-answers .q-answer { display: block !important; border: 1px solid #CCC; background: #F9FFF9; }
+  body.print-with-answers .q-answer-content { display: block !important; }
+  /* 只有題目模式 */
+  body.print-no-answers .q-answer { display: none !important; }
 }
 </style>
 </head>
@@ -570,22 +571,19 @@ function openPrintMenu() { document.getElementById('printMenu').classList.add('s
 function closePrintMenu() { document.getElementById('printMenu').classList.remove('show'); document.body.style.overflow=''; }
 
 function doPrint(withAnswers) {
-  printWithAnswers = withAnswers;
   closePrintMenu();
-  // 展開或收合解答
-  document.querySelectorAll('.q-answer').forEach(el => {
-    el.style.display = withAnswers ? '' : 'none';
-  });
   // 更新列印標題
   const meta = document.getElementById('printMeta');
   const base = meta.dataset.base || meta.textContent;
   meta.dataset.base = base;
   meta.textContent = base + (withAnswers ? '' : '（練習用，不含解答）');
+  // 用 body class 控制列印樣式
+  document.body.classList.remove('print-with-answers','print-no-answers');
+  document.body.classList.add(withAnswers ? 'print-with-answers' : 'print-no-answers');
   setTimeout(() => {
     window.print();
-    // 列印後恢復
     setTimeout(() => {
-      document.querySelectorAll('.q-answer').forEach(el => el.style.display = '');
+      document.body.classList.remove('print-with-answers','print-no-answers');
       meta.textContent = base;
     }, 500);
   }, 100);
