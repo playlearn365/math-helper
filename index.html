@@ -181,9 +181,9 @@ textarea:focus { border-color: var(--primary); }
 .po-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
 .po-desc { font-size: 12px; color: var(--text-muted); }
 
-.print-header { display: none; }
+/* 列印區域：螢幕隱藏，列印顯示 */
+#printArea { display: none; }
 
-/* 列印媒體查詢：隱藏非列印區域 */
 @media print {
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; }
@@ -407,10 +407,19 @@ function renderMath(text) {
 }
 
 function buildSystemPrompt() {
-  const typeHint = selectedType === 'auto' ? '請自動判斷題型。' : `這是一道【${selectedType}】。`;
-  return `你是一位專業的國小數學老師。根據老師提供的錯題，出 3 道類似的練習題。
-分數書寫規則：純分數 {分子/分母}，帶分數 {整數+分子/分母}。只回傳 JSON 格式。
-{"originalSummary":"原題摘要","detectedType":"題型","questions":[{"question":"題目","solution":"步驟","answer":"答案","hasFigure":false,"figureHint":""}]}`;
+  const typeHint = selectedType === 'auto' ? '請自動判斷題型（計算題、應用題或圖形題）。' : `這是一道【${selectedType}】。`;
+  return `你是一位專業的國小數學老師。根據老師提供的錯題，出 3 道類似的練習題，難度和考點相同，適合${selectedGrade}學生程度。
+${typeHint}
+
+【分數書寫規則，必須嚴格遵守】
+- 純分數：{分子/分母}，例如 {3/16}、{21/25}
+- 帶分數：{整數+分子/分母}，例如 {5+3/9}、{7+2/5}
+- 帶分數前面絕對不能加「又」字
+- 禁止使用 LaTeX（$\\frac{}{}$）、禁止使用 ½ 符號
+- 解題步驟中的分數也要用以上格式
+
+只回傳以下 JSON，不含其他文字：
+{"originalSummary":"原題摘要","detectedType":"計算題或應用題或圖形題","questions":[{"question":"題目","solution":"步驟","answer":"答案","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""}]}`;
 }
 
 async function generate() {
@@ -447,7 +456,7 @@ async function callVision(apiKey) {
         {role:'system', content:buildSystemPrompt()},
         {role:'user', content:[
           {type:'image_url', image_url:{url:`data:${imageType};base64,${imageBase64}`}},
-          {type:'text', text:`出 3 道相似題。`}
+          {type:'text', text:`這是${selectedGrade}的數學錯題，請出 3 道相似題。分數用 {分子/分母} 或 {整數+分子/分母} 格式，禁止用 LaTeX。`}
         ]}
       ],
       max_tokens:2500, temperature:0.7
@@ -463,7 +472,7 @@ async function callText(apiKey, questionText) {
       model:'llama-3.3-70b-versatile',
       messages:[
         {role:'system', content:buildSystemPrompt()},
-        {role:'user', content:`錯題：${questionText}`}
+        {role:'user', content:`這是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題。分數用 {分子/分母} 或 {整數+分子/分母} 格式，禁止用 LaTeX。`}
       ],
       max_tokens:2500, temperature:0.7
     })
@@ -572,7 +581,7 @@ function doPrint(withAnswers) {
     document.body.appendChild(area);
   }
 
-  area.style.cssText = 'display:none; font-family:Noto Sans TC,sans-serif; max-width:800px; margin:0 auto; padding:30px; color:#2D2D2D;';
+  area.style.cssText = 'font-family:Noto Sans TC,sans-serif; max-width:800px; margin:0 auto; padding:30px; color:#2D2D2D;';
   area.innerHTML = `
     <div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid #FF6B35;">
       <div style="font-size:22px;font-weight:700;color:#FF6B35;margin-bottom:6px;">數學練習題</div>
@@ -584,11 +593,19 @@ function doPrint(withAnswers) {
     </div>
     ${questionsHtml}`;
 
-  // 延遲一下確保內容渲染後再開列印視窗
-  setTimeout(() => {
-    window.print();
-  }, 50);
+  // 延遲確保內容渲染後再列印
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.print();
+    });
+  });
 }
+
+// 列印完畢後移除 printArea
+window.addEventListener('afterprint', () => {
+  const area = document.getElementById('printArea');
+  if (area) area.remove();
+});
 
 function copyAll() {
   if (!lastResult) return;
