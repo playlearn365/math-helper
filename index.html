@@ -3,674 +3,1332 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#FF6B35">
 <title>數學錯題相似題產生器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #FFF8F0; --card: #FFFFFF; --primary: #FF6B35; --primary-light: #FFF0EB;
-  --primary-dark: #D94F1E; --accent: #4ECDC4; --accent-light: #E8FAFA;
-  --text: #2D2D2D; --text-muted: #888; --border: #F0E6DC;
-  --radius: 16px; --radius-sm: 10px; --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg:#FFF8F0;--card:#FFF;--pri:#FF6B35;--pri-lt:#FFF0EB;--pri-dk:#D94F1E;
+  --acc:#4ECDC4;--acc-lt:#E8FAFA;--txt:#2D2D2D;--muted:#888;--bdr:#F0E6DC;
+  --r:16px;--r-sm:10px;--sb:env(safe-area-inset-bottom,0px);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { scroll-behavior: smooth; }
-body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); font-size: 16px; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);min-height:100vh;color:var(--txt);font-size:16px}
 
-/* ===== 分數樣式 ===== */
-.frac {
-  display: inline-flex; flex-direction: column; align-items: center;
-  vertical-align: middle; font-size: 0.85em; line-height: 1.2;
-  margin: 0 2px; position: relative; top: -1px;
+/* frac */
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.85em;line-height:1.2;margin:0 2px;position:relative;top:-1px}
+.frac-num{border-bottom:1.5px solid currentColor;padding:0 3px;text-align:center;min-width:16px}
+.frac-den{padding:0 3px;text-align:center;min-width:16px}
+.mixed-num{display:inline-flex;align-items:center;gap:1px;vertical-align:middle}
+
+/* header */
+header{background:var(--card);border-bottom:2px solid var(--bdr);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30}
+.logo{width:40px;height:40px;background:var(--pri);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+header h1{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--pri)}
+header p{font-size:11px;color:var(--muted)}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+.hbtn{background:none;border:1.5px solid var(--bdr);border-radius:10px;padding:7px 10px;font-size:18px;cursor:pointer}
+.hbtn:hover{border-color:var(--pri);background:var(--pri-lt)}
+
+/* main */
+.main{max-width:680px;margin:0 auto;padding:16px 14px calc(80px + var(--sb));display:flex;flex-direction:column;gap:14px}
+
+/* card */
+.card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--bdr);overflow:hidden}
+.card-head{padding:13px 18px 11px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px}
+.step{width:26px;height:26px;background:var(--pri);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+.card-head h2{font-size:15px;font-weight:700}
+.card-body{padding:16px}
+
+/* grade */
+.grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gbtn{border:1.5px solid var(--bdr);border-radius:var(--r-sm);background:#fff;padding:14px 4px;font-size:14px;font-family:'Noto Sans TC',sans-serif;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;text-align:center;min-height:52px}
+.gbtn.active{border-color:var(--pri);background:var(--pri);color:#fff;font-weight:700}
+
+/* qtype */
+.qt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.qtbtn{border:1.5px solid var(--bdr);border-radius:var(--r-sm);background:#fff;padding:13px 12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;min-height:64px}
+.qt-icon{font-size:22px;flex-shrink:0}
+.qt-name{font-size:14px;font-weight:700;color:var(--txt)}
+.qt-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.qtbtn.active{border-color:#7C5CBF;background:#7C5CBF}
+.qtbtn.active .qt-name,.qtbtn.active .qt-desc{color:#fff}
+
+/* upload */
+.red-notice{background:#FFF0F0;border:1.5px solid #FFB5B5;border-radius:var(--r-sm);padding:12px 14px;font-size:13px;color:#C0392B;line-height:1.7;margin-bottom:12px;display:flex;gap:8px}
+.media-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mbtn{border:2px solid var(--bdr);border-radius:var(--r);background:#fff;padding:20px 10px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+.mbtn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.mbtn .mi{font-size:32px}
+.mbtn .ml{font-size:14px;font-weight:700;color:var(--txt)}
+.mbtn .ms{font-size:11px;color:var(--muted)}
+.preview-wrap{display:none;margin-bottom:12px;position:relative}
+.preview-wrap.show{display:block}
+.preview-img{width:100%;max-height:280px;object-fit:contain;border-radius:var(--r-sm);border:1.5px solid var(--bdr);background:#F8F8F8}
+.rm-img{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* mark */
+.mark-box{display:none;background:#FFF9F0;border:1.5px solid #FFD9B5;border-radius:var(--r-sm);padding:13px 14px;margin-top:10px}
+.mark-box.show{display:block}
+.mark-title{font-size:13px;font-weight:700;color:#E67E22;margin-bottom:8px}
+.mark-opts{display:flex;flex-direction:column;gap:8px}
+.mopt{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1.5px solid #FFD9B5;background:#fff;font-size:13px;line-height:1.5}
+.mopt input{accent-color:#E67E22;width:18px;height:18px;cursor:pointer;flex-shrink:0}
+.enum-inp{display:none;margin-top:10px}
+.enum-inp.show{display:block}
+.enum-inp input{width:100%;border:1.5px solid #FFD9B5;border-radius:8px;padding:10px 12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;outline:none}
+
+.divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:12px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:var(--r-sm);padding:13px 14px;font-size:15px;font-family:'Noto Sans TC',sans-serif;color:var(--txt);resize:none;outline:none;min-height:90px;line-height:1.7;background:#fff}
+textarea:focus{border-color:var(--pri)}
+
+/* bottom bar */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:25;background:#fff;border-top:1.5px solid var(--bdr);padding:12px 16px calc(12px + var(--sb))}
+.gen-btn{width:100%;background:var(--pri);color:#fff;border:none;border-radius:var(--r);padding:17px;font-size:17px;font-family:'Nunito',sans-serif;font-weight:900;cursor:pointer;transition:all .18s}
+.gen-btn:active{transform:scale(.98);background:var(--pri-dk)}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* error / loading */
+.err-box{display:none;background:#FFF0F0;border:1.5px solid #FFB5B5;border-radius:var(--r-sm);padding:14px 16px;color:#C0392B;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.err-box.show{display:block}
+.loading{display:none;text-align:center;padding:36px 20px}
+.loading.show{display:block}
+.dots{display:flex;justify-content:center;gap:8px;margin-bottom:14px}
+.dots span{width:13px;height:13px;background:var(--pri);border-radius:50%;animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-13px);opacity:1}}
+.loading p{color:var(--muted);font-size:14px}
+
+/* result */
+.result-sec{display:none}
+.result-sec.show{display:block}
+.result-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.result-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.result-title h2{font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:var(--pri)}
+.badge{background:var(--pri-lt);color:var(--pri);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700}
+.type-badge{border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700}
+.exp-btns{display:flex;gap:8px;width:100%}
+.exp-btn{flex:1;background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:10px;font-size:13px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;text-align:center;color:var(--txt)}
+.exp-btn.print{border-color:var(--acc);color:var(--acc)}
+.err-analysis{background:#FFF0F0;border:1.5px solid #FFB5B5;border-radius:var(--r-sm);padding:13px 16px;margin-bottom:14px;font-size:14px;line-height:1.8}
+.err-analysis strong{color:#C0392B;display:block;margin-bottom:4px}
+.wrong{color:#C0392B;font-weight:700}
+.correct{color:#27AE60;font-weight:700}
+.orig-sum{background:#F5F5F5;border-radius:var(--r-sm);padding:12px 16px;margin-bottom:14px;font-size:14px;color:var(--muted);line-height:2;border-left:4px solid var(--pri)}
+.orig-sum strong{color:var(--pri);display:block;margin-bottom:3px;font-size:12px}
+.q-card{background:#fff;border:1.5px solid var(--bdr);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.q-head{background:var(--pri-lt);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #FFE0D0}
+.q-num{width:30px;height:30px;background:var(--pri);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-family:'Nunito',sans-serif;font-size:15px;flex-shrink:0}
+.q-lbl{font-size:14px;color:var(--pri-dk);font-weight:700}
+.q-body{padding:16px}
+.q-text{font-size:16px;line-height:2.4;color:var(--txt);word-break:break-word}
+.canvas-wrap{margin-top:14px;background:#F8F8FF;border:1.5px solid #D0D0F0;border-radius:var(--r-sm);padding:12px}
+.canvas-title{font-size:12px;color:#666;margin-bottom:8px;font-weight:700}
+.q-canvas{display:block;width:100%;max-width:340px;margin:0 auto;border:1px solid #DDD;border-radius:6px;background:#fff}
+.q-ans{margin-top:14px;background:var(--acc-lt);border:1.5px solid var(--acc);border-radius:var(--r-sm);padding:12px 14px}
+.q-ans-toggle{background:none;border:none;cursor:pointer;font-size:14px;color:var(--acc);font-weight:700;padding:0;display:flex;align-items:center;gap:8px;font-family:'Noto Sans TC',sans-serif;width:100%;min-height:44px}
+.q-ans-body{display:none;margin-top:10px;font-size:14px;color:#0D7A74;line-height:2.4}
+.q-ans-body.show{display:block}
+.ans-final{margin-top:10px;font-weight:700;font-size:15px}
+.reset-btn{width:100%;background:#fff;color:var(--pri);border:2px solid var(--pri);border-radius:var(--r);padding:15px;font-size:15px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;margin-top:6px;min-height:52px}
+
+/* modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.mbox{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px calc(24px + var(--sb));width:100%;max-width:680px;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:40px;height:4px;background:#DDD;border-radius:4px;margin:0 auto 20px}
+.mbox h3{font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:var(--pri);margin-bottom:16px}
+.ss{display:flex;gap:12px;margin-bottom:16px}
+.ss-num{width:28px;height:28px;background:var(--pri);border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ss-text{font-size:14px;line-height:1.7}
+.ss-text a{color:var(--pri);font-weight:700;text-decoration:none}
+.ss-text code{background:#F5F5F5;padding:2px 7px;border-radius:5px;font-size:13px;font-family:monospace}
+.key-row{display:flex;gap:8px;margin-top:6px}
+.key-row input{flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:12px 14px;font-size:14px;font-family:monospace;outline:none}
+.key-row input:focus{border-color:var(--pri)}
+.key-save{background:var(--pri);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer}
+.key-st{font-size:12px;margin-top:6px;min-height:16px}
+.key-st.ok{color:#27AE60}.key-st.miss{color:#E74C3C}
+.mclose{width:100%;background:#F5F5F5;border:none;border-radius:12px;padding:14px;font-size:15px;font-family:'Noto Sans TC',sans-serif;font-weight:700;color:var(--muted);cursor:pointer;margin-top:16px}
+.hist-empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 0}
+.hist-item{border:1.5px solid var(--bdr);border-radius:var(--r-sm);padding:13px 14px;margin-bottom:10px;cursor:pointer}
+.hist-item:active{background:var(--pri-lt);border-color:var(--pri)}
+.hist-sum{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-clear{width:100%;background:none;border:1.5px solid #FFB5B5;border-radius:10px;padding:12px;font-size:13px;font-family:'Noto Sans TC',sans-serif;color:#C0392B;cursor:pointer;margin-top:8px}
+.popt{width:100%;background:#fff;border:1.5px solid var(--bdr);border-radius:var(--r-sm);padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px;font-family:'Noto Sans TC',sans-serif;margin-bottom:12px}
+.popt:hover{border-color:var(--pri);background:var(--pri-lt)}
+.po-icon{font-size:28px;flex-shrink:0}
+.po-title{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:3px}
+.po-desc{font-size:12px;color:var(--muted)}
+
+/* ===== WELCOME SCREEN ===== */
+.wl-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  z-index:200;display:none;align-items:center;justify-content:center;padding:16px;
 }
-.frac-num { border-bottom: 1.5px solid currentColor; padding: 0 3px; text-align: center; min-width: 16px; }
-.frac-den { padding: 0 3px; text-align: center; min-width: 16px; }
-.mixed-num {
-  display: inline-flex; align-items: center; gap: 1px;
-  vertical-align: middle;
+.wl-overlay.show{display:flex}
+.wl-box{
+  background:#fff;border-radius:24px;padding:28px 22px;
+  width:100%;max-width:420px;max-height:90vh;overflow-y:auto;
 }
-.mixed-int { font-size: 1em; }
+.wl-logo{text-align:center;font-size:48px;margin-bottom:6px}
+.wl-title{text-align:center;font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--pri);margin-bottom:3px}
+.wl-sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:22px}
+.wl-steps{display:flex;flex-direction:column;gap:14px;margin-bottom:22px}
+.wl-step{display:flex;gap:12px;align-items:flex-start}
+.wl-n{width:32px;height:32px;background:var(--pri);border-radius:50%;color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wl-ttl{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:3px}
+.wl-dsc{font-size:12px;color:var(--muted);line-height:1.7}
+.wl-dsc a{color:var(--pri);font-weight:700;text-decoration:none}
+.wl-dsc code{background:#F5F5F5;padding:2px 6px;border-radius:4px;font-size:12px}
+.wl-inp-wrap{background:#FFF8F0;border:1.5px solid var(--bdr);border-radius:var(--r-sm);padding:14px;margin-bottom:14px}
+.wl-inp-lbl{font-size:12px;font-weight:700;color:var(--pri);margin-bottom:8px}
+.wl-inp-row{display:flex;gap:8px}
+.wl-inp-row input{flex:1;border:1.5px solid var(--bdr);border-radius:8px;padding:11px 12px;font-size:14px;font-family:monospace;outline:none;background:#fff;min-width:0}
+.wl-inp-row input:focus{border-color:var(--pri)}
+.wl-inp-row input.valid{border-color:#27AE60;background:#EAFAF1}
+.wl-save{background:var(--pri);color:#fff;border:none;border-radius:8px;padding:11px 16px;font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap}
+.wl-save:disabled{opacity:.4;cursor:not-allowed}
+.wl-st{font-size:12px;margin-top:7px;min-height:16px;text-align:center}
+.wl-st.ok{color:#27AE60;font-weight:700}
+.wl-st.err{color:#E74C3C}
+.wl-skip{width:100%;background:none;border:1.5px solid var(--bdr);border-radius:var(--r-sm);padding:12px;font-size:13px;font-family:'Noto Sans TC',sans-serif;color:var(--muted);cursor:pointer}
 
-header {
-  background: var(--card); border-bottom: 2px solid var(--border);
-  padding: 14px 18px; display: flex; align-items: center; gap: 12px;
-  position: sticky; top: 0; z-index: 30;
-}
-.logo-icon { width: 40px; height: 40px; background: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-header h1 { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: var(--primary); line-height: 1.2; }
-header p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-.header-right { margin-left: auto; display: flex; gap: 8px; }
-.history-btn, .setup-btn { background: none; border: 1.5px solid var(--border); border-radius: 10px; padding: 7px 10px; font-size: 18px; cursor: pointer; transition: all .18s; }
-.history-btn:hover, .setup-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+/* key banner */
+.key-banner{display:none;background:#FFF3CD;border:1.5px solid #FFD700;border-radius:var(--r-sm);padding:12px 16px;font-size:13px;color:#856404;cursor:pointer;text-align:center;line-height:1.6;margin:0 14px 0}
+.key-banner.show{display:block}
 
-.main { max-width: 680px; margin: 0 auto; padding: 16px 14px calc(80px + var(--safe-bottom)); display: flex; flex-direction: column; gap: 14px; }
-
-.card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); overflow: hidden; }
-.card-header { padding: 13px 18px 11px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.card-header .step { width: 26px; height: 26px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.card-header h2 { font-size: 15px; font-weight: 700; }
-.card-body { padding: 16px; }
-
-.grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.grade-btn { border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; padding: 14px 4px; font-size: 14px; font-family: 'Noto Sans TC', sans-serif; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all .15s; text-align: center; min-height: 52px; }
-.grade-btn:active { transform: scale(.96); }
-.grade-btn.active { border-color: var(--primary); background: var(--primary); color: white; font-weight: 700; }
-
-.qtype-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.qtype-btn { border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; padding: 13px 12px; font-family: 'Noto Sans TC', sans-serif; cursor: pointer; transition: all .15s; text-align: left; display: flex; align-items: center; gap: 10px; min-height: 64px; }
-.qtype-btn:active { transform: scale(.97); }
-.qt-icon { font-size: 22px; flex-shrink: 0; }
-.qt-info { display: flex; flex-direction: column; }
-.qt-name { font-size: 14px; font-weight: 700; color: var(--text); }
-.qt-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.qtype-btn.active { border-color: #7C5CBF; background: #7C5CBF; }
-.qtype-btn.active .qt-name { color: white; }
-.qtype-btn.active .qt-desc { color: rgba(255,255,255,.7); }
-
-.figure-notice { display: none; background: #FEF9E7; border: 1.5px solid #F9CA24; border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: #856404; line-height: 1.7; margin-top: 10px; }
-.figure-notice.show { display: block; }
-
-.media-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.media-btn { border: 2px solid var(--border); border-radius: var(--radius); background: white; padding: 20px 10px; text-align: center; cursor: pointer; transition: all .18s; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
-.media-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.media-btn:active { transform: scale(.97); }
-.media-btn .mb-icon { font-size: 32px; }
-.media-btn .mb-label { font-size: 14px; font-weight: 700; color: var(--text); }
-.media-btn .mb-sub { font-size: 11px; color: var(--text-muted); }
-
-.preview-wrap { display: none; margin-bottom: 12px; position: relative; }
-.preview-wrap.show { display: block; }
-.preview-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: #F8F8F8; }
-.remove-img { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-.divider { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; margin: 12px 0; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; color: var(--text); resize: none; outline: none; min-height: 90px; line-height: 1.7; transition: border-color .2s; background: white; }
-textarea:focus { border-color: var(--primary); }
-
-.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 25; background: white; border-top: 1.5px solid var(--border); padding: 12px 16px calc(12px + var(--safe-bottom)); }
-.generate-btn { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius); padding: 17px; font-size: 17px; font-family: 'Nunito', sans-serif; font-weight: 900; cursor: pointer; transition: all .18s; letter-spacing: 0.5px; }
-.generate-btn:active { transform: scale(.98); background: var(--primary-dark); }
-.generate-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.error-box { display: none; background: #FFF0F0; border: 1.5px solid #FFB5B5; border-radius: var(--radius-sm); padding: 14px 16px; color: #C0392B; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
-.error-box.show { display: block; }
-
-.loading { display: none; text-align: center; padding: 36px 20px; }
-.loading.show { display: block; }
-.dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
-.dots span { width: 13px; height: 13px; background: var(--primary); border-radius: 50%; animation: bounce 1.2s infinite; }
-.dots span:nth-child(2) { animation-delay: .2s; }
-.dots span:nth-child(3) { animation-delay: .4s; }
-@keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.5;}40%{transform:translateY(-13px);opacity:1;} }
-.loading p { color: var(--text-muted); font-size: 14px; }
-
-.result-section { display: none; }
-.result-section.show { display: block; }
-.result-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-.result-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.result-title h2 { font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 900; color: var(--primary); }
-.badge { background: var(--primary-light); color: var(--primary); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
-.qtype-badge { border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
-.export-btns { display: flex; gap: 8px; width: 100%; }
-.export-btn { flex: 1; background: white; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; cursor: pointer; transition: all .15s; text-align: center; color: var(--text); }
-.export-btn:active { transform: scale(.97); }
-.export-btn.print-btn { border-color: var(--accent); color: var(--accent); }
-
-.original-summary { background: #F5F5F5; border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px; font-size: 14px; color: var(--text-muted); line-height: 2; border-left: 4px solid var(--primary); }
-.original-summary strong { color: var(--primary); display: block; margin-bottom: 3px; font-size: 12px; }
-.figure-result-notice { display: none; background: #FEF9E7; border: 1.5px solid #F0C56E; border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: #7B5800; line-height: 1.8; margin-bottom: 14px; }
-.figure-result-notice.show { display: block; }
-
-.question-card { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
-.q-header { background: var(--primary-light); padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #FFE0D0; }
-.q-num { width: 30px; height: 30px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-family: 'Nunito', sans-serif; font-size: 15px; flex-shrink: 0; }
-.q-label { font-size: 14px; color: var(--primary-dark); font-weight: 700; }
-.q-type-tag { margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-.q-body { padding: 16px; }
-.q-text { font-size: 16px; line-height: 2.4; color: var(--text); word-break: break-word; }
-.q-figure-hint { margin-top: 10px; background: #FEF9E7; border-left: 3px solid #E67E22; padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: 13px; color: #7B5800; line-height: 1.6; }
-.q-answer { margin-top: 14px; background: var(--accent-light); border: 1.5px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 14px; }
-.q-answer-toggle { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--accent); font-weight: 700; padding: 0; display: flex; align-items: center; gap: 8px; font-family: 'Noto Sans TC', sans-serif; width: 100%; min-height: 44px; }
-.q-answer-content { display: none; margin-top: 10px; font-size: 14px; color: #0D7A74; line-height: 2.4; }
-.q-answer-content.show { display: block; }
-.answer-final { margin-top: 10px; font-weight: 700; font-size: 15px; }
-
-.reset-btn { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: var(--radius); padding: 15px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; cursor: pointer; transition: all .18s; margin-top: 6px; min-height: 52px; }
-.reset-btn:active { transform: scale(.98); background: var(--primary-light); }
-
-/* ===== MODALS ===== */
-.modal-overlay, .history-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; align-items: flex-end; justify-content: center; }
-.modal-overlay.show, .history-overlay.show { display: flex; }
-.modal-box, .history-box { background: white; border-radius: 24px 24px 0 0; padding: 24px 20px calc(24px + var(--safe-bottom)); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
-@keyframes slideUp { from{transform:translateY(100%);}to{transform:translateY(0);} }
-.modal-handle { width: 40px; height: 4px; background: #DDD; border-radius: 4px; margin: 0 auto 20px; }
-.modal-box h3, .history-box h3 { font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 900; color: var(--primary); margin-bottom: 16px; }
-.setup-step { display: flex; gap: 12px; margin-bottom: 16px; }
-.setup-step .ss-num { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.setup-step .ss-text { font-size: 14px; line-height: 1.7; }
-.setup-step a { color: var(--primary); font-weight: 700; text-decoration: none; }
-.setup-step code { background: #F5F5F5; padding: 2px 7px; border-radius: 5px; font-size: 13px; font-family: monospace; }
-.api-input-row { display: flex; gap: 8px; margin-top: 6px; }
-.api-input-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: monospace; outline: none; transition: border-color .2s; }
-.api-input-row input:focus { border-color: var(--primary); }
-.save-key-btn { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif; cursor: pointer; }
-.key-status { font-size: 12px; margin-top: 6px; height: 16px; }
-.key-status.ok { color: #27AE60; } .key-status.missing { color: #E74C3C; }
-.modal-close { width: 100%; background: #F5F5F5; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: 700; color: var(--text-muted); cursor: pointer; margin-top: 16px; }
-.history-empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 30px 0; }
-.history-item { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 10px; cursor: pointer; transition: all .15s; }
-.history-item:active { background: var(--primary-light); border-color: var(--primary); }
-.hi-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-.hi-grade { background: var(--primary-light); color: var(--primary); border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 700; }
-.hi-type { border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 700; }
-.hi-time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
-.hi-summary { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.history-clear { width: 100%; background: none; border: 1.5px solid #FFB5B5; border-radius: 10px; padding: 12px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; color: #C0392B; cursor: pointer; margin-top: 8px; }
-
-.print-option-btn {
-  width: 100%; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 16px; cursor: pointer; transition: all .15s;
-  display: flex; align-items: center; gap: 14px; text-align: left;
-  font-family: 'Noto Sans TC', sans-serif;
-}
-.print-option-btn:hover, .print-option-btn:active { border-color: var(--primary); background: var(--primary-light); }
-.po-icon { font-size: 28px; flex-shrink: 0; }
-.po-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-.po-desc { font-size: 12px; color: var(--text-muted); }
-
-/* 列印區域：螢幕隱藏，列印顯示 */
-#printArea { display: none; }
-
-@media print {
-  body > *:not(#printArea) { display: none !important; }
-  #printArea { display: block !important; }
-}
+#printArea{display:none}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important}}
 </style>
 </head>
 <body>
 
+<!-- ===== WELCOME SCREEN ===== -->
+<div class="wl-overlay" id="wlOverlay">
+  <div class="wl-box">
+    <div class="wl-logo">🧮</div>
+    <div class="wl-title">數學錯題相似題產生器</div>
+    <div class="wl-sub">國小課輔老師專用・免費・AI 驅動</div>
+    <div class="wl-steps">
+      <div class="wl-step">
+        <div class="wl-n">1</div>
+        <div>
+          <div class="wl-ttl">免費申請 Groq 帳號</div>
+          <div class="wl-dsc">前往 <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>，用 Google 帳號登入</div>
+        </div>
+      </div>
+      <div class="wl-step">
+        <div class="wl-n">2</div>
+        <div>
+          <div class="wl-ttl">建立 API Key</div>
+          <div class="wl-dsc">點「Get API Key」→「Create API Key」→ 複製以 <code>AIza</code> 開頭的金鑰</div>
+        </div>
+      </div>
+      <div class="wl-step">
+        <div class="wl-n">3</div>
+        <div>
+          <div class="wl-ttl">貼入下方儲存，只需一次</div>
+          <div class="wl-dsc">Key 只存在您的瀏覽器，不會上傳，之後打開直接使用</div>
+        </div>
+      </div>
+    </div>
+    <div class="wl-inp-wrap">
+      <div class="wl-inp-lbl">貼上你的 API Key：</div>
+      <div class="wl-inp-row">
+        <input type="password" id="wlKey" placeholder="AIzaSy..." autocomplete="off">
+        <button class="wl-save" id="wlSaveBtn" disabled onclick="wlSave()">儲存</button>
+      </div>
+      <div class="wl-st" id="wlSt"></div>
+    </div>
+    <button class="wl-skip" onclick="localStorage.setItem('wl_done','skip');wlClose()">先跳過（出題時還會提示）</button>
+  </div>
+</div>
+
 <header>
-  <div class="logo-icon">🧮</div>
+  <div class="logo">🧮</div>
   <div>
     <h1>數學錯題相似題</h1>
-    <p>國小課輔老師專用</p>
+    <p>國小課輔老師專用・支援紅筆圈選・幾何繪圖</p>
   </div>
-  <div class="header-right">
-    <button class="history-btn" onclick="openHistory()">📋</button>
-    <button class="setup-btn" onclick="openSetup()">⚙️</button>
+  <div class="hbtns">
+    <button class="hbtn" onclick="openHist()">📋</button>
+    <button class="hbtn" onclick="openSetup()">⚙️</button>
   </div>
 </header>
 
+<div class="key-banner" id="keyBanner" onclick="wlOpen()">
+  🔑 尚未設定 API Key，點此完成一次設定即可使用
+</div>
+
 <div class="main">
-  <!-- 第一步：選擇年級 -->
   <div class="card">
-    <div class="card-header"><div class="step">1</div><h2>選擇年級</h2></div>
+    <div class="card-head"><div class="step">1</div><h2>選擇年級</h2></div>
     <div class="card-body">
       <div class="grade-grid">
-        <button class="grade-btn" data-grade="一年級">一年級</button>
-        <button class="grade-btn" data-grade="二年級">二年級</button>
-        <button class="grade-btn" data-grade="三年級">三年級</button>
-        <button class="grade-btn" data-grade="四年級">四年級</button>
-        <button class="grade-btn" data-grade="五年級">五年級</button>
-        <button class="grade-btn" data-grade="六年級">六年級</button>
+        <button class="gbtn" data-g="一年級">一年級</button>
+        <button class="gbtn" data-g="二年級">二年級</button>
+        <button class="gbtn" data-g="三年級">三年級</button>
+        <button class="gbtn" data-g="四年級">四年級</button>
+        <button class="gbtn" data-g="五年級">五年級</button>
+        <button class="gbtn" data-g="六年級">六年級</button>
       </div>
     </div>
   </div>
 
-  <!-- 第二步：題型 -->
   <div class="card">
-    <div class="card-header"><div class="step">2</div><h2>題型</h2></div>
+    <div class="card-head"><div class="step">2</div><h2>題型</h2></div>
     <div class="card-body">
-      <div class="qtype-grid">
-        <button class="qtype-btn active" data-type="auto"><span class="qt-icon">🤖</span><span class="qt-info"><span class="qt-name">AI 自動判斷</span><span class="qt-desc">自動識別題型</span></span></button>
-        <button class="qtype-btn" data-type="計算題"><span class="qt-icon">🔢</span><span class="qt-info"><span class="qt-name">計算題</span><span class="qt-desc">加減乘除、分數</span></span></button>
-        <button class="qtype-btn" data-type="應用題"><span class="qt-icon">📖</span><span class="qt-info"><span class="qt-name">應用題</span><span class="qt-desc">文字情境解題</span></span></button>
-        <button class="qtype-btn" data-type="圖形題"><span class="qt-icon">📐</span><span class="qt-info"><span class="qt-name">圖形題</span><span class="qt-desc">幾何、面積、統計</span></span></button>
+      <div class="qt-grid">
+        <button class="qtbtn active" data-t="auto"><span class="qt-icon">🤖</span><span><span class="qt-name">AI 自動判斷</span><span class="qt-desc" style="display:block">自動識別題型</span></span></button>
+        <button class="qtbtn" data-t="計算題"><span class="qt-icon">🔢</span><span><span class="qt-name">計算題</span><span class="qt-desc" style="display:block">加減乘除、分數</span></span></button>
+        <button class="qtbtn" data-t="應用題"><span class="qt-icon">📖</span><span><span class="qt-name">應用題</span><span class="qt-desc" style="display:block">文字情境解題</span></span></button>
+        <button class="qtbtn" data-t="圖形題"><span class="qt-icon">📐</span><span><span class="qt-name">圖形題</span><span class="qt-desc" style="display:block">幾何・面積・體積</span></span></button>
       </div>
-      <div class="figure-notice" id="figureNotice">📌 <strong>圖形題說明：</strong>AI 會以文字描述圖形，並附上「教師備注」。</div>
     </div>
   </div>
 
-  <!-- 第三步：上傳錯題 -->
   <div class="card">
-    <div class="card-header"><div class="step">3</div><h2>上傳錯題</h2></div>
+    <div class="card-head"><div class="step">3</div><h2>上傳錯題</h2></div>
     <div class="card-body">
-      <div class="preview-wrap" id="previewWrap">
-        <img id="previewImg" class="preview-img" alt="題目預覽">
-        <button class="remove-img" id="removeImg">✕</button>
+      <div class="red-notice">
+        <span>🖊️</span>
+        <div><strong>支援紅筆圈選辨識</strong><br>照片中紅筆圈起來的題目，AI 會自動辨識為錯題</div>
+      </div>
+      <div class="preview-wrap" id="prevWrap">
+        <img id="prevImg" class="preview-img" alt="預覽">
+        <button class="rm-img" id="rmImg">✕</button>
       </div>
       <div class="media-btns" id="mediaBtns">
-        <div class="media-btn">
-          <input type="file" id="cameraInput" accept="image/*" capture="environment">
-          <div class="mb-icon">📷</div><div class="mb-label">拍照</div><div class="mb-sub">直接開相機</div>
+        <div class="mbtn">
+          <input type="file" id="camInput" accept="image/*" capture="environment">
+          <div class="mi">📷</div><div class="ml">拍照</div><div class="ms">直接開相機</div>
         </div>
-        <div class="media-btn">
-          <input type="file" id="galleryInput" accept="image/*">
-          <div class="mb-icon">🖼️</div><div class="mb-label">從相簿選取</div><div class="mb-sub">選已有的圖片</div>
+        <div class="mbtn">
+          <input type="file" id="galInput" accept="image/*">
+          <div class="mi">🖼️</div><div class="ml">從相簿選取</div><div class="ms">選已有的圖片</div>
+        </div>
+      </div>
+      <div class="mark-box" id="markBox">
+        <div class="mark-title">🖊️ 圖片中如何標記錯題？</div>
+        <div class="mark-opts">
+          <label class="mopt"><input type="radio" name="mk" value="auto" checked onchange="onMk(this)"><span>AI 自動判斷（預設）</span></label>
+          <label class="mopt"><input type="radio" name="mk" value="circle" onchange="onMk(this)"><span>有紅筆圈選</span></label>
+          <label class="mopt"><input type="radio" name="mk" value="number" onchange="onMk(this)"><span>指定題號</span></label>
+          <label class="mopt"><input type="radio" name="mk" value="all" onchange="onMk(this)"><span>全部都是錯題</span></label>
+        </div>
+        <div class="enum-inp" id="enumInp">
+          <input type="text" id="enumTxt" placeholder="例如：第 2 題、第 ② 題">
         </div>
       </div>
       <div class="divider">或 輸入題目文字</div>
-      <textarea id="questionText" placeholder="例如：小明有 24 顆糖果，分給 6 個朋友，每人可以分到幾顆？" rows="4"></textarea>
+      <textarea id="qText" placeholder="例如：小明有 24 顆糖，分給 6 個朋友，每人幾顆？" rows="4"></textarea>
     </div>
   </div>
 
-  <div class="error-box" id="errorBox"></div>
-  <div class="loading" id="loading"><div class="dots"><span></span><span></span><span></span></div><p>AI 正在出題中，請稍候⋯</p></div>
+  <div class="err-box" id="errBox"></div>
+  <div class="loading" id="loading">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <p id="ldMsg">AI 正在分析錯題並出題中⋯</p>
+  </div>
 
-  <!-- 結果展示區域 -->
-  <div class="result-section" id="resultSection">
+  <div class="result-sec" id="resultSec">
     <div class="result-topbar">
       <div class="result-title">
         <h2>📝 相似題</h2>
         <span class="badge" id="gradeBadge"></span>
-        <span class="qtype-badge" id="qtypeBadge"></span>
+        <span class="type-badge" id="typeBadge"></span>
       </div>
-      <div class="export-btns">
-        <button class="export-btn print-btn" onclick="openPrintMenu()">🖨️ 列印／PDF</button>
-        <button class="export-btn" id="copyBtn" onclick="copyAll()">📋 複製文字</button>
+      <div class="exp-btns">
+        <button class="exp-btn print" onclick="openPrint()">🖨️ 列印</button>
+        <button class="exp-btn" id="copyBtn" onclick="copyAll()">📋 複製</button>
       </div>
     </div>
-    <div class="figure-result-notice" id="figureResultNotice">⚠️ <strong>圖形題：</strong>請依「教師備注」補充圖形或作圖空間。</div>
-    <div class="original-summary" id="originalSummary"></div>
-    <div id="questionsContainer"></div>
-    <button class="reset-btn" onclick="resetAll()">🔄 重新上傳題目</button>
+    <div class="err-analysis" id="errAnalysis" style="display:none">
+      <strong>🔍 錯題分析</strong>
+      <div id="errAnaContent"></div>
+    </div>
+    <div class="orig-sum" id="origSum"></div>
+    <div id="qContainer"></div>
+    <button class="reset-btn" onclick="location.reload()">🔄 重新上傳題目</button>
   </div>
 </div>
 
 <div class="bottom-bar">
-  <button class="generate-btn" id="generateBtn" onclick="generate()">✨ 產生 3 題相似題</button>
+  <button class="gen-btn" id="genBtn" onclick="generate()">✨ 產生 3 題相似題</button>
 </div>
 
-<!-- PRINT MENU MODAL -->
-<div class="modal-overlay" id="printMenu" onclick="if(event.target===this)closePrintMenu()">
-  <div class="modal-box">
-    <div class="modal-handle"></div>
+<!-- Print Modal -->
+<div class="overlay" id="printModal" onclick="if(event.target===this)closePrint()">
+  <div class="mbox">
+    <div class="mhandle"></div>
     <h3>🖨️ 選擇列印內容</h3>
-    <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
-      <!-- 只有題目傳入 false -->
-      <button class="print-option-btn" onclick="doPrint(false)">
-        <div class="po-icon">📝</div>
-        <div class="po-info">
-          <div class="po-title">只有題目</div>
-          <div class="po-desc">適合印給學生練習，不含解答</div>
-        </div>
-      </button>
-      <!-- 題目+解答傳入 true -->
-      <button class="print-option-btn" onclick="doPrint(true)">
-        <div class="po-icon">📋</div>
-        <div class="po-info">
-          <div class="po-title">題目 + 解答</div>
-          <div class="po-desc">含解題過程與答案，適合老師參考</div>
-        </div>
-      </button>
-    </div>
-    <button class="modal-close" onclick="closePrintMenu()">取消</button>
+    <button class="popt" onclick="doPrint(false)"><div class="po-icon">📝</div><div><div class="po-title">只有題目</div><div class="po-desc">適合印給學生練習</div></div></button>
+    <button class="popt" onclick="doPrint(true)"><div class="po-icon">📋</div><div><div class="po-title">題目 + 解答</div><div class="po-desc">含解題過程，適合老師</div></div></button>
+    <button class="mclose" onclick="closePrint()">取消</button>
   </div>
 </div>
 
-<!-- API SETUP MODAL -->
-<div class="modal-overlay" id="setupModal" onclick="if(event.target===this)closeSetup()">
-  <div class="modal-box">
-    <div class="modal-handle"></div>
+<!-- Setup Modal -->
+<div class="overlay" id="setupModal" onclick="if(event.target===this)closeSetup()">
+  <div class="mbox">
+    <div class="mhandle"></div>
     <h3>⚙️ API Key 設定</h3>
-    <div class="setup-step"><div class="ss-num">1</div><div class="ss-text">前往 <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> 免費申請帳號</div></div>
-    <div class="setup-step"><div class="ss-num">2</div><div class="ss-text">登入後點「Create API Key」，複製以 <code>gsk_</code> 開頭的金鑰</div></div>
-    <div class="setup-step"><div class="ss-num">3</div><div class="ss-text">貼到下方並儲存（只存在您的手機，不會上傳）</div></div>
-    <div class="api-input-row">
-      <input type="password" id="modalApiKey" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-      <button class="save-key-btn" onclick="saveKey()">儲存</button>
+    <div class="ss"><div class="ss-num">1</div><div class="ss-text">前往 <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a> 免費申請</div></div>
+    <div class="ss"><div class="ss-num">2</div><div class="ss-text">點「Get API Key」→「Create API Key」，複製以 <code>AIza</code> 開頭的金鑰</div></div>
+    <div class="ss"><div class="ss-num">3</div><div class="ss-text">貼到下方儲存（只存在您的瀏覽器）</div></div>
+    <div class="key-row">
+      <input type="password" id="setupKey" placeholder="AIzaSy..." autocomplete="off">
+      <button class="key-save" onclick="setupSave()">儲存</button>
     </div>
-    <div class="key-status" id="keyStatus"></div>
-    <button class="modal-close" onclick="closeSetup()">關閉</button>
+    <div class="key-st" id="keySt"></div>
+    <button class="mclose" onclick="closeSetup()">關閉</button>
   </div>
 </div>
 
-<!-- HISTORY OVERLAY -->
-<div class="history-overlay" id="historyPanel" onclick="if(event.target===this)closeHistory()">
-  <div class="history-box">
-    <div class="modal-handle"></div>
+<!-- History Modal -->
+<div class="overlay" id="histModal" onclick="if(event.target===this)closeHist()">
+  <div class="mbox">
+    <div class="mhandle"></div>
     <h3>📋 出題紀錄</h3>
-    <div id="historyList"></div>
-    <button class="history-clear" onclick="clearHistory()">🗑️ 清除所有紀錄</button>
-    <button class="modal-close" onclick="closeHistory()">關閉</button>
+    <div id="histList"></div>
+    <button class="hist-clear" onclick="clearHist()">🗑️ 清除所有紀錄</button>
+    <button class="mclose" onclick="closeHist()">關閉</button>
   </div>
 </div>
 
 <script>
-let selectedGrade = '';
-let selectedType = 'auto';
-let imageBase64 = '';
-let imageType = '';
-let lastResult = null;
+// ===== STATE =====
+let grade = '', qtype = 'auto', imgB64 = '', imgMime = '', markMode = 'auto', lastResult = null;
 
-// UI 交互
-document.querySelectorAll('.grade-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedGrade = btn.dataset.grade;
-  });
+// ===== GRADE / TYPE =====
+document.querySelectorAll('.gbtn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.gbtn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); grade = b.dataset.g;
 });
-document.querySelectorAll('.qtype-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.qtype-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedType = btn.dataset.type;
-    document.getElementById('figureNotice').classList.toggle('show', selectedType === '圖形題');
-  });
+document.querySelectorAll('.qtbtn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.qtbtn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); qtype = b.dataset.t;
 });
 
-// 檔案處理
-document.getElementById('cameraInput').addEventListener('change', e => { if(e.target.files[0]) processFile(e.target.files[0]); });
-document.getElementById('galleryInput').addEventListener('change', e => { if(e.target.files[0]) processFile(e.target.files[0]); });
-function processFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const r = e.target.result;
-    imageBase64 = r.split(',')[1]; imageType = file.type || 'image/jpeg';
-    document.getElementById('previewImg').src = r;
-    document.getElementById('previewWrap').classList.add('show');
+// ===== IMAGE =====
+function onFile(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    imgB64 = e.target.result.split(',')[1];
+    imgMime = file.type || 'image/jpeg';
+    document.getElementById('prevImg').src = e.target.result;
+    document.getElementById('prevWrap').classList.add('show');
     document.getElementById('mediaBtns').style.display = 'none';
+    document.getElementById('markBox').classList.add('show');
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(file);
 }
-document.getElementById('removeImg').addEventListener('click', () => {
-  imageBase64 = ''; imageType = '';
-  document.getElementById('previewImg').src = '';
-  document.getElementById('previewWrap').classList.remove('show');
+document.getElementById('camInput').onchange = e => { if(e.target.files[0]) onFile(e.target.files[0]); };
+document.getElementById('galInput').onchange = e => { if(e.target.files[0]) onFile(e.target.files[0]); };
+document.getElementById('rmImg').onclick = () => {
+  imgB64 = ''; imgMime = '';
+  document.getElementById('prevImg').src = '';
+  document.getElementById('prevWrap').classList.remove('show');
   document.getElementById('mediaBtns').style.display = '';
-  document.getElementById('cameraInput').value = '';
-  document.getElementById('galleryInput').value = '';
-});
-
-const typeColors = {
-  '計算題':{ bg:'#EBF5FB', color:'#2980B9', border:'#AED6F1' },
-  '應用題':{ bg:'#EAFAF1', color:'#27AE60', border:'#A9DFBF' },
-  '圖形題':{ bg:'#FEF9E7', color:'#E67E22', border:'#F9CA24' },
-  '一般題':{ bg:'#F5F5F5', color:'#888', border:'#DDD' },
+  document.getElementById('markBox').classList.remove('show');
+  document.getElementById('camInput').value = '';
+  document.getElementById('galInput').value = '';
 };
-
-// 分數渲染
-function renderMath(text) {
-  if (!text) return '';
-  text = text.replace(/\{(\d+)\+(\d+)\/(\d+)\}/g, (_, w, n, d) =>
-    `<span class="mixed-num"><span class="mixed-int">${w}</span><span class="frac"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span></span>`
-  );
-  text = text.replace(/\{(\d+)\/(\d+)\}/g, (_, n, d) =>
-    `<span class="frac"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span>`
-  );
-  text = text.replace(/\n/g, '<br>');
-  return text;
+function onMk(r) {
+  markMode = r.value;
+  document.getElementById('enumInp').classList.toggle('show', markMode === 'number');
 }
 
-function buildSystemPrompt() {
-  const typeHint = selectedType === 'auto' ? '請自動判斷題型（計算題、應用題或圖形題）。' : `這是一道【${selectedType}】。`;
-  return `你是一位專業的國小數學老師。根據老師提供的錯題，出 3 道類似的練習題，難度和考點相同，適合${selectedGrade}學生程度。
-${typeHint}
+// ===== PROMPT =====
+function sysPrompt() {
+  return (
+    '你是國小數學老師兼錯題分析專家。根據老師提供的錯題，分析錯誤原因，出3道相似題，適合' + grade + '程度。\n\n' +
 
-【分數書寫規則，必須嚴格遵守】
-- 純分數：{分子/分母}，例如 {3/16}、{21/25}
-- 帶分數：{整數+分子/分母}，例如 {5+3/9}、{7+2/5}
-- 帶分數前面絕對不能加「又」字
-- 禁止使用 LaTeX（$\\frac{}{}$）、禁止使用 ½ 符號
-- 解題步驟中的分數也要用以上格式
+    '=== 第一步：辨識錯題 ===\n' +
+    '圖片中紅色圓圈圈住的是錯題；紅色打叉是錯題；選擇題選了錯選項請指出正確答案。\n\n' +
 
-只回傳以下 JSON，不含其他文字：
-{"originalSummary":"原題摘要","detectedType":"計算題或應用題或圖形題","questions":[{"question":"題目","solution":"步驟","answer":"答案","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""},{"question":"","solution":"","answer":"","hasFigure":false,"figureHint":""}]}`;
+    '=== 第二步：用三個維度分析題目（最重要）===\n' +
+    '在出相似題之前，先回答這三個問題：\n\n' +
+
+    '【維度1：題目格式】\n' +
+    '這道題的呈現方式是什麼？\n' +
+    '例如：單一填空、兩格連續填空（A=(?)B=(?)C）、選擇題（給選項選一個）、' +
+    '計算題（列式求答）、應用文字題（有情境描述）、圖形題（需要看圖）\n' +
+    '→ 相似題必須用完全相同的格式\n\n' +
+
+    '【維度2：考點核心】\n' +
+    '這道題在測驗學生的什麼能力？\n' +
+    '例如：單位換算、兩階段換算、生活量感判斷、體積計算、容積計算（扣厚度）、' +
+    '多步驟加減、乘除應用、面積周長、分數計算\n' +
+    '→ 相似題必須考同樣的核心能力\n\n' +
+
+    '【維度3：難點或陷阱】\n' +
+    '學生容易在哪裡出錯？\n' +
+    '例如：小數點位置（÷1000的進位）、要扣板厚、無蓋容器、' +
+    '單位名稱混淆、需要分兩步計算、分數加減需通分、' +
+    '複合圖形（圓內有三角形、兩圓相交）要看清楚各圖形的關係\n' +
+    '→ 相似題必須包含同樣的難點，讓學生有機會練習克服\n\n' +
+
+    '【特別注意：複合圖形題】\n' +
+    '如果原題有多個圖形組合，相似題也必須有同樣的複合結構，絕對不能加入原題沒有的圖形（如長方形）。\n' +
+    '判斷方法：原題有什麼圖形，相似題就只能有同樣的圖形組合。\n\n' +
+
+    '【關鍵範例：生活量感判斷選擇題】\n' +
+    '原題：「②洗澡用的浴缸容量大約是（□200公升，□2公升）」\n\n' +
+    '這道題的核心特徵：\n' +
+    '  1. 完全不需要計算！學生靠生活常識判斷即可\n' +
+    '  2. 題目用「大約是」，不是「等於」或「共是多少」\n' +
+    '  3. 格式：描述一個生活物品 + 兩個差距很大的選項\n\n' +
+    '正確相似題（只換物品和數字）：\n' +
+    '  ✓「一個水桶的容量大約是（□10公升，□10毫升）」\n' +
+    '  ✓「一瓶沙拉油的容量大約是（□900毫升，□9公升）」\n' +
+    '  ✓「學校游泳池的容量大約是（□500公升，□500000公升）」\n\n' +
+    '錯誤相似題（考點不同，禁止）：\n' +
+    '  ✗「6罐250毫升果汁共是多少毫升」← 計算題，原題不需要計算！\n' +
+    '  ✗「一瓶1.2公升的飲料換算成毫升是多少」← 換算題！\n' +
+    '  ✗「0.2公升等於（□200毫升，□2毫升）」← 換算題偽裝成選擇題！\n\n' +
+    '最重要判斷原則：如果原題學生不需要計算就能作答，相似題也絕對不能需要計算。\n' +
+    '如果原題本來就是計算題或換算題，就照樣出計算題或換算題。\n\n' +
+
+    '【關鍵範例：容量多步驟應用題】\n' +
+    '原題：「5瓶楊桃汁共900毫升，如果把5瓶楊桃汁加入60毫升的糖水，混合的楊桃汁有多少毫升？」\n' +
+    '  格式：文字應用題，需要列式計算\n' +
+    '  考點核心：「共900毫升」是總量不是單瓶量，直接用總量加上糖水即可\n' +
+    '  難點：學生容易誤解為「每瓶900毫升」而多做一個乘法步驟\n' +
+    '  正確解法：900 + 60 = 960 毫升（不需要乘以5！）\n' +
+    '  正確相似題：「8瓶橘子汁共720毫升，加入40毫升蜂蜜水，混合果汁有多少毫升？」\n' +
+    '  錯誤相似題：「一瓶綠茶500毫升，6瓶共多少毫升」← 這是單純乘法，沒有抓到難點！\n\n' +
+
+    '【關鍵範例：兩圓＋三角形甲】\n' +
+    '原題：「下圖為2個相同的大圓，三角形甲的周長為24公分，請問大圓的半徑是(  )公分，直徑是(   )公分」\n' +
+    '  考點格式：兩段式填空（半徑和直徑各填一格）\n' +
+    '  考點核心：由三角形甲的周長反推大圓半徑和直徑\n' +
+    '  幾何關係：兩圓相交，三角形甲的三邊 = 兩個半徑 + 兩圓交點之間的弦，每邊 = 半徑\n' +
+    '  所以：三角形甲周長 = 半徑×3，半徑 = 周長÷3\n' +
+    '  正確相似題：「下圖為2個相同的大圓，三角形甲的周長為30公分，請問大圓的半徑是(  )公分，直徑是(   )公分」\n' +
+    '  錯誤相似題：「長方形內有兩個圓...」← 原題沒有長方形，絕對禁止加入！\n\n' +
+
+    '=== 第三步：根據三個維度出題 ===\n' +
+    '每道相似題都必須：\n' +
+    '(1) 格式與原題相同（填空就填空、兩段式就兩段式、選擇就給選項）\n' +
+    '(2) 考同樣的核心能力\n' +
+    '(3) 包含同樣的難點\n' +
+    '(4) 題目本身必須完整自給自足：所有需要的數字（長、寬、高、厚度、數量等）都要寫在題目裡\n' +
+    '    ✗ 錯誤：「這是一個無蓋的玻璃魚缸，玻璃厚度是2公分，可以裝多少毫升的水？」← 沒有長寬高！\n' +
+    '    ✓ 正確：「這是一個無蓋的玻璃魚缸，長50公分，寬40公分，高50公分，玻璃厚度是2公分，可以裝多少毫升的水？」\n' +
+    '(5) 解答用到的每個數字，在題目裡都必須有明確說明\n' +
+    '數字要換成不同的，但題型結構完全一樣\n\n' +
+
+    '=== 分數格式 ===\n' +
+    '純分數{分子/分母}，帶分數{整數+分子/分母}，禁止LaTeX。\n\n' +
+
+    '=== 幾何圖形（needsCanvas判斷規則）===\n' +
+    'needsCanvas = true 的情況（以下任一符合就設true）：\n' +
+    '  - 題目有圖形：圓、三角形、長方形、正方形、多邊形、線段角度\n' +
+    '  - 題目說「如圖」、「下圖」、「圖中」\n' +
+    '  - 題目描述圖形的位置關係（如：圓內有三角形、兩圓相交）\n' +
+    '  - 題目有面積、周長、體積、角度的幾何計算\n' +
+    '  - 題目提到圓周長、圓面積、半徑、直徑\n' +
+    'needsCanvas = false 的情況：\n' +
+    '  - 純數字換算（毫升↔公升）\n' +
+    '  - 純四則運算文字題（沒有幾何圖形）\n\n' +
+
+    '只回傳JSON，不含其他文字：\n' +
+    '{"originalSummary":"原題摘要",' +
+    '"format":"題目格式（如：兩段式填空/選擇題/計算應用題）",' +
+    '"coreSkill":"考點核心（如：兩階段單位換算）",' +
+    '"trapPoint":"難點（如：÷1000小數點位置）",' +
+    '"detectedType":"題型",' +
+    '"errorAnalysis":"學生錯誤原因",' +
+    '"studentWrongAnswer":"學生答案",' +
+    '"correctAnswer":"正確答案",' +
+    '"needsCanvas":false,' +
+    '"questions":[' +
+    '{"question":"第1題完整題目（格式與原題相同）","solution":"解題步驟","answer":"答案"},' +
+    '{"question":"第2題完整題目","solution":"解題步驟","answer":"答案"},' +
+    '{"question":"第3題完整題目","solution":"解題步驟","answer":"答案"}' +
+    ']}'
+  );
+}
+function markHint() {
+  if (!imgB64) return '';
+  if (markMode === 'circle') return '圖中紅色圓圈圈住的是錯題，以那題出相似題。';
+  if (markMode === 'number') return '學生答錯的是：' + (document.getElementById('enumTxt').value || '？') + '，以那題出相似題。';
+  if (markMode === 'all') return '所有題目都是錯題，綜合出相似題。';
+  return '自動辨識紅筆標記的錯題。';
 }
 
+// ===== GENERATE =====
 async function generate() {
-  const apiKey = localStorage.getItem('groq_api_key') || '';
-  const questionText = document.getElementById('questionText').value.trim();
-  document.getElementById('errorBox').classList.remove('show');
-  if (!apiKey) { showError('請先設定 API Key。'); return; }
-  if (!selectedGrade) { showError('請選擇年級。'); return; }
-  if (!imageBase64 && !questionText) { showError('請提供題目內容。'); return; }
+  const key = getKey();
+  const txt = document.getElementById('qText').value.trim();
+  document.getElementById('errBox').classList.remove('show');
+  if (!key) { showErr('請先設定 API Key（點右上角 ⚙️）'); wlOpen(); return; }
+  if (!grade) { showErr('請選擇年級'); return; }
+  if (!imgB64 && !txt) { showErr('請上傳錯題圖片或輸入題目'); return; }
 
-  document.getElementById('generateBtn').disabled = true;
-  document.getElementById('loading').classList.add('show');
-  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('genBtn').disabled = true;
+  setLoading(true, imgB64 ? 'AI 正在辨識圖片並分析錯誤⋯' : 'AI 正在分析題目並出相似題⋯');
+  document.getElementById('resultSec').classList.remove('show');
 
   try {
-    const result = imageBase64 ? await callVision(apiKey) : await callText(apiKey, questionText);
+    const result = imgB64 ? await callVision(key) : await callText(key, txt);
     lastResult = result;
-    saveHistory(result);
+    saveHist(result);
     renderResult(result);
-  } catch(err) {
-    showError('出題失敗：' + err.message);
+
+    if (result.needsCanvas) {
+      setLoading(true, 'AI 正在繪製幾何圖形⋯');
+      await genCanvas(key, result).catch(e => console.warn('canvas err:', e));
+      setLoading(false);
+    }
+  } catch(e) {
+    showErr('出題失敗：' + e.message);
   } finally {
-    document.getElementById('generateBtn').disabled = false;
-    document.getElementById('loading').classList.remove('show');
+    document.getElementById('genBtn').disabled = false;
+    setLoading(false);
   }
 }
 
-async function callVision(apiKey) {
-  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-    body: JSON.stringify({
-      model:'meta-llama/llama-4-scout-17b-16e-instruct',
-      messages:[
-        {role:'system', content:buildSystemPrompt()},
-        {role:'user', content:[
-          {type:'image_url', image_url:{url:`data:${imageType};base64,${imageBase64}`}},
-          {type:'text', text:`這是${selectedGrade}的數學錯題，請出 3 道相似題。分數用 {分子/分母} 或 {整數+分子/分母} 格式，禁止用 LaTeX。`}
-        ]}
-      ],
-      max_tokens:2500, temperature:0.7
-    })
+// ===== Gemini API 輔助 =====
+async function geminiCall(key, parts, systemText, maxTokens) {
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
+  const body = {
+    system_instruction: { parts: [{ text: systemText }] },
+    contents: [{ role: 'user', parts: parts }],
+    generationConfig: { maxOutputTokens: maxTokens || 3000, temperature: 0.7 }
+  };
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
   });
-  return parseResp(resp);
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    throw new Error('HTTP ' + r.status + ': ' + (e.error?.message || '請確認 API Key 是否正確'));
+  }
+  const data = await r.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
-async function callText(apiKey, questionText) {
-  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-    body: JSON.stringify({
-      model:'llama-3.3-70b-versatile',
-      messages:[
-        {role:'system', content:buildSystemPrompt()},
-        {role:'user', content:`這是${selectedGrade}的數學錯題：\n\n${questionText}\n\n請出 3 道相似題。分數用 {分子/分母} 或 {整數+分子/分母} 格式，禁止用 LaTeX。`}
-      ],
-      max_tokens:2500, temperature:0.7
-    })
-  });
-  return parseResp(resp);
+async function callVision(key) {
+  const userPrompt = '這是' + grade + '的數學錯題照片。' + markHint() + '\n分數用{分子/分母}格式。請分析並出3道相似題。只回傳JSON。';
+  const parts = [
+    { inline_data: { mime_type: imgMime, data: imgB64 } },
+    { text: userPrompt }
+  ];
+  const raw = await geminiCall(key, parts, sysPrompt(), 4000);
+  return parseRaw(raw);
 }
 
-async function parseResp(response) {
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || '';
-  const m = content.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error('AI 回傳格式有誤');
-  return JSON.parse(m[0]);
+async function callText(key, txt) {
+  const parts = [{ text: '這是' + grade + '的數學錯題：\n\n' + txt + '\n\n請分析並出3道相似題。只回傳JSON。' }];
+  const raw = await geminiCall(key, parts, sysPrompt(), 4000);
+  return parseRaw(raw);
 }
+
+function parseRaw(raw) {
+  // 移除 Gemini 常回傳的 markdown 包裝（```json ... ```）
+  let cleaned = raw.trim();
+  cleaned = cleaned.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/i, '').trim();
+  const m = cleaned.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('AI 回傳格式有誤，請重試');
+  const s = m[0];
+  const tries = [
+    () => JSON.parse(s),
+    () => JSON.parse(s.replace(/\\(?!["\\/bfnrtu])/g, '\\\\')),
+    () => JSON.parse(s.replace(/[\u0000-\u001F\u007F]/g, ' ')),
+    () => {
+      const last = s.lastIndexOf('"}');
+      return last > 0 ? JSON.parse(s.substring(0, last+2) + ']}') : null;
+    }
+  ];
+  for (const t of tries) {
+    try { const r = t(); if(r) return r; } catch(e) {}
+  }
+  throw new Error('JSON 解析失敗，請重試');
+}
+
+// ===== CANVAS GENERATION =====
+// AI 回傳結構化數據 → 前端內建引擎繪圖（穩定）
+// ===== 智慧繪圖：先嘗試內建模板，失敗再用 AI =====
+function tryBuiltInSVG(txt) {
+  const nums = [...txt.matchAll(/[\d.]+/g)].map(m=>parseFloat(m[0]));
+  if (!nums.length) return null;
+  const isDiam = /直徑/.test(txt), isCirc = /周長/.test(txt), isRad = /半徑/.test(txt);
+
+  // 兩個相同的圓＋三角形（兩圓相交，三角形頂點=左圓圓心，底邊=兩交點）
+  const hasTri = /三角形/.test(txt);
+
+  // 半圓＋三角形（2個相同半圓 + 三角形）
+  const hasTwoSemiCircles = /[2２兩]個.*半圓|半圓.*[2２兩]個/.test(txt);
+  if (hasTwoSemiCircles && nums.length >= 1) {
+    const val = nums[0];
+    // 三角形周長已知，半圓直徑=三角形的邊（等邊三角形：每邊=周長/3）
+    // 或直接給半圓半徑/直徑
+    const sideLen = isCirc ? val : val; // 先用第一個數字
+    const r = sideLen / 2;
+    const R = Math.min(Math.max(r * 4, 35), 75);
+    const cx = 150, cy = 115;
+    // 等邊三角形頂點（底邊水平，頂點朝上）
+    const triH = R * Math.sqrt(3);
+    const p1x = cx - R, p1y = cy;        // 左底
+    const p2x = cx + R, p2y = cy;        // 右底
+    const p3x = cx,     p3y = cy - triH; // 頂點
+    return '<svg viewBox="0 0 300 230"><rect width="300" height="230" fill="white"/>' +
+      '<!-- 三角形 -->' +
+      '<polygon points="'+p1x+','+p1y+' '+p2x+','+p2y+' '+p3x+','+p3y+'" fill="rgba(214,234,248,0.5)" stroke="#2C3E50" stroke-width="1.8"/>' +
+      '<!-- 左半圓（底邊左半，向左凸出）-->' +
+      '<path d="M '+p1x+' '+p1y+' A '+R+' '+R+' 0 0 0 '+p3x+' '+p3y+'" fill="rgba(52,152,219,0.15)" stroke="#2471A3" stroke-width="1.8"/>' +
+      '<!-- 右半圓（底邊右半，向右凸出）-->' +
+      '<path d="M '+p3x+' '+p3y+' A '+R+' '+R+' 0 0 0 '+p2x+' '+p2y+'" fill="rgba(52,152,219,0.15)" stroke="#2471A3" stroke-width="1.8"/>' +
+      '<!-- 標注 -->' +
+      '<text x="'+cx+'" y="'+(p1y+22)+'" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#1A252F">三角形周長 '+val+' 公分</text>' +
+      '<text x="'+(p1x-18)+'" y="'+(p1y-R*0.5)+'" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#2471A3">半圓</text>' +
+      '<text x="'+(p2x+22)+'" y="'+(p2y-R*0.5)+'" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#2471A3">半圓</text>' +
+      '</svg>';
+  }
+
+  // 兩個相同的整圓＋三角形
+  const hasTwoSameCircles = /兩個相同.*圓|兩個.*相同.*圓|2個相同.*圓|[2２]個.*相同.*圓/.test(txt) && !/半圓/.test(txt);
+  if (hasTwoSameCircles && nums.length >= 1) {
+    const val = nums.find(n => n > 5) || nums[nums.length-1];
+
+    // 正三角形條件：兩圓圓心距 = 半徑 R
+    // 畫布：R=65，圓心距=65，兩圓心在同一水平線
+    const R  = 65;
+    const d  = R;            // 圓心距 = R（正三角形條件）
+    const cx = 150;          // 畫布水平中心
+    const cy = 125;          // 兩圓心的 y 座標（稍低，留空間給上方標注）
+    const cx1 = cx - d/2;    // 左圓心 x = 117.5
+    const cx2 = cx + d/2;    // 右圓心 x = 182.5
+
+    // 兩圓交點 y 偏移：h = R*√3/2（正三角形高）
+    const h = R * Math.sqrt(3) / 2;  // ≈56.3
+    const iyTop = cy - h;   // 上交點 y ≈ 68.7（在兩圓心上方）
+    const iyBot = cy + h;   // 下交點 y ≈ 181.3
+
+    const lbl = isCirc ? '三角形甲周長 '+val+' 公分'
+               : isDiam ? '直徑 '+val+' 公分'
+               : '半徑 '+val+' 公分';
+
+    // 三角形重心
+    const triCx = cx;
+    const triCy = (cy + cy + iyTop) / 3;
+
+    return '<svg viewBox="0 0 300 230"><rect width="300" height="230" fill="white"/>' +
+      // 左圓（淡藍透明，輪廓線清晰）
+      '<circle cx="'+cx1+'" cy="'+cy+'" r="'+R+'" fill="rgba(173,216,230,0.3)" stroke="#2C3E50" stroke-width="2"/>' +
+      // 右圓（同樣透明，兩圓輪廓線在重疊區都可見）
+      '<circle cx="'+cx2+'" cy="'+cy+'" r="'+R+'" fill="rgba(173,216,230,0.3)" stroke="#2C3E50" stroke-width="2"/>' +
+      (hasTri ?
+        // 正三角形甲：頂點=上交點(cx,iyTop)，底邊=兩圓心(cx1,cy)-(cx2,cy)
+        '<polygon points="'+cx+','+iyTop+' '+cx1+','+cy+' '+cx2+','+cy+'" fill="rgba(39,174,96,0.25)" stroke="#27AE60" stroke-width="2"/>' +
+        '<text x="'+triCx+'" y="'+(triCy+5)+'" font-size="13" text-anchor="middle" font-family="sans-serif" fill="#1A7A40">甲</text>'
+        : '') +
+      '<text x="'+cx1+'" y="'+(cy-R-8)+'" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#555">左圓</text>' +
+      '<text x="'+cx2+'" y="'+(cy-R-8)+'" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#555">右圓</text>' +
+      '<text x="150" y="'+(cy+R+20)+'" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#1A252F">'+lbl+'</text>' +
+      '</svg>';
+  }
+
+  // 兩個小圓內接大圓
+  if (/兩個|2個/.test(txt) && /小圓/.test(txt) && /大圓/.test(txt)) {
+    const val = nums[0];
+    let bigR, smallR;
+    if (/小圓.*?(直徑|半徑)|(直徑|半徑).*?小圓/.test(txt)) {
+      smallR = isDiam ? val/2 : val;
+      bigR = smallR * 2;
+    } else {
+      bigR = isDiam ? val/2 : isCirc ? val/(2*Math.PI) : val;
+      smallR = bigR / 2;
+    }
+    const BR = Math.min(Math.max(bigR*3.5, 40), 82);
+    const SR = BR/2, cx=150, cy=108;
+    const fmtB = n => Number.isInteger(n) ? n : n.toFixed(1);
+    const fmtS = n => Number.isInteger(n) ? n : n.toFixed(1);
+    const hasTri = /三角形/.test(txt);
+    return `<svg viewBox="0 0 300 220"><rect width="300" height="220" fill="white"/>
+<!-- 大圓 -->
+<circle cx="${cx}" cy="${cy}" r="${BR}" fill="#EBF5FB" stroke="#2C3E50" stroke-width="2"/>
+<!-- 左小圓 -->
+<circle cx="${cx-SR}" cy="${cy}" r="${SR}" fill="none" stroke="#E67E22" stroke-width="1.8"/>
+<!-- 右小圓 -->
+<circle cx="${cx+SR}" cy="${cy}" r="${SR}" fill="none" stroke="#E67E22" stroke-width="1.8"/>
+<!-- 直徑虛線 -->
+<line x1="${cx-BR}" y1="${cy}" x2="${cx+BR}" y2="${cy}" stroke="#888" stroke-width="1" stroke-dasharray="5,3"/>
+${hasTri ? `<!-- 三角形甲 -->
+<polygon points="${cx},${cy-BR} ${cx-SR},${cy+SR} ${cx+SR},${cy+SR}" fill="none" stroke="#27AE60" stroke-width="1.8"/>
+<text x="${cx}" y="${cy+SR*0.4}" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#27AE60">甲</text>` : ''}
+<!-- 大圓標注 -->
+<text x="${cx}" y="${cy+BR+16}" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#1A252F">大圓直徑 ${fmtB(bigR*2)} 公分</text>
+<!-- 小圓半徑 -->
+<line x1="${cx-SR}" y1="${cy}" x2="${cx}" y2="${cy}" stroke="#E67E22" stroke-width="1.2"/>
+<text x="${cx-SR/2}" y="${cy-5}" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#E67E22">${fmtS(smallR)} 公分</text>
+<!-- 小圓標注 -->
+<text x="${cx-SR}" y="${cy-SR-8}" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#E67E22">小圓</text>
+<text x="${cx+SR}" y="${cy-SR-8}" font-size="11" text-anchor="middle" font-family="sans-serif" fill="#E67E22">小圓</text>
+</svg>`;
+  }
+
+  // 單圓：固定 R=85 填滿畫布
+  if (/一個圓|圓的/.test(txt) && nums.length) {
+    const val = nums[0];
+    const R = 85, cx = 150, cy = 108;
+    if (isDiam) {
+      return `<svg viewBox="0 0 300 220"><rect width="300" height="220" fill="white"/>
+<circle cx="${cx}" cy="${cy}" r="${R}" fill="#EBF5FB" stroke="#2C3E50" stroke-width="2"/>
+<line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="#E74C3C" stroke-width="1.8"/>
+<text x="${cx}" y="${cy-8}" font-size="13" text-anchor="middle" font-family="sans-serif" fill="#E74C3C">直徑 ${val} 公分</text>
+</svg>`;
+    } else {
+      return `<svg viewBox="0 0 300 220"><rect width="300" height="220" fill="white"/>
+<circle cx="${cx}" cy="${cy}" r="${R}" fill="#EBF5FB" stroke="#2C3E50" stroke-width="2"/>
+<line x1="${cx}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="#E74C3C" stroke-width="1.8"/>
+<text x="${cx+R/2}" y="${cy-8}" font-size="13" text-anchor="middle" font-family="sans-serif" fill="#E74C3C">半徑 ${val} 公分</text>
+</svg>`;
+    }
+  }
+  // 無蓋容器（水槽、水箱、魚缸、水泥槽、木箱）
+  const isOpenBox = /無蓋|水槽|水箱|魚缸|水泥槽|木箱|木盒/.test(txt);
+  if (isOpenBox && nums.length >= 3) {
+    const Lm = txt.match(/長[\s]*([\d.]+)/);
+    const Wm = txt.match(/寬[\s]*([\d.]+)/);
+    const Hm = txt.match(/高[\s]*([\d.]+)/);
+    const Tm = txt.match(/厚度[是為]?[\s]*([\d.]+)|([\d.]+)[\s]*公分.*?(?:厚度|板厚|玻璃厚|磚塊)/);
+    const sorted = [...nums].sort((a,b)=>b-a);
+    const L = Lm ? parseFloat(Lm[1]) : sorted[0];
+    const W = Wm ? parseFloat(Wm[1]) : sorted[1];
+    const H = Hm ? parseFloat(Hm[1]) : sorted[2];
+    const T = Tm ? parseFloat(Tm[1]||Tm[2]) : (nums.find(n=>n<10&&n>0) || 0);
+    if (L && W && H) {
+      return '__BUILTIN_BOX__' + JSON.stringify({shape:'open_box', dims:{L,W,H,T}});
+    }
+  }
+
+  return null;
+}
+
+async function genCanvas(key, result) {
+  const qs = result.questions || [];
+  await Promise.all(qs.map(async (q, i) => {
+    try {
+      // 先試內建模板
+      const builtin = tryBuiltInSVG(q.question);
+      if (builtin) {
+        if (builtin.startsWith('__BUILTIN_BOX__')) {
+          // 使用內建立體容器繪圖引擎
+          const shapeData = JSON.parse(builtin.slice(15));
+          injectCanvasFromData(i, shapeData);
+          return;
+        }
+        q.svgCode = builtin;
+        injectSVG(i, builtin);
+        return;
+      }
+
+      const svgPrompt =
+        'Create an SVG diagram for this elementary math problem. Return ONLY the SVG, no explanation.\n' +
+        'SVG spec: viewBox="0 0 300 220", no width/height attributes, white background rect first.\n\n' +
+        'DRAWING RULES:\n' +
+        '- Lines: stroke="#2C3E50" stroke-width="2" fill="none"\n' +
+        '- Colored lines: use the actual color named in the problem (red, blue, green, yellow, etc.)\n' +
+        '- Right angle mark: draw a small square <rect> 8x8 at the corner, fill="none" stroke="#2C3E50"\n' +
+        '- Labels: font-size="13" font-family="sans-serif" fill="#1A252F"\n' +
+        '- Circles: fill="#EBF5FB" stroke="#2C3E50" stroke-width="1.5"\n' +
+        '- Shaded regions: fill="#D6EAF8"\n\n' +
+        'CRITICAL RULES FOR ANGLE PROBLEMS:\n' +
+        '- Each named line (e.g. 紅線, 藍線) must be drawn as TWO line segments meeting at a point to form an angle\n' +
+        '- Right angles: draw two lines meeting at EXACTLY 90 degrees, add the small square mark at the corner\n' +
+        '- Non-right angles: draw two lines meeting at clearly non-90 degree angle (e.g. 45 or 60 degrees)\n' +
+        '- Each angle group should be spatially separated in the diagram\n' +
+        '- Label each angle group with its color name\n' +
+        '- Number each group with circled numbers ① ② ③ near the angle\n\n' +
+        'EXAMPLE for a problem with 3 angle groups (① right angle, ② non-right, ③ right):\n' +
+        '<svg viewBox="0 0 300 220">\n' +
+        '<rect width="300" height="220" fill="white"/>\n' +
+        '<!-- Group 1: right angle (top-left) -->\n' +
+        '<line x1="60" y1="140" x2="60" y2="60" stroke="yellow" stroke-width="2"/>\n' +
+        '<line x1="60" y1="140" x2="150" y2="140" stroke="yellow" stroke-width="2"/>\n' +
+        '<rect x="60" y="130" width="10" height="10" fill="none" stroke="#333" stroke-width="1.5"/>\n' +
+        '<text x="40" y="55" font-size="13" fill="#333">①黃線</text>\n' +
+        '<!-- Group 2: non-right angle (top-right) -->\n' +
+        '<line x1="200" y1="60" x2="240" y2="160" stroke="purple" stroke-width="2"/>\n' +
+        '<line x1="240" y1="60" x2="200" y2="160" stroke="purple" stroke-width="2"/>\n' +
+        '<text x="255" y="110" font-size="13" fill="#333">②紫線</text>\n' +
+        '</svg>\n\n' +
+        'COMPLEX DIAGRAMS:\n' +
+        '- Two overlapping circles: draw both circles with different center positions\n' +
+        '- Circle with inscribed shape: draw the circle first, then the shape inside\n' +
+        '- Label radius with an arrow line from center to edge, label diameter across the full width\n' +
+        '- For composite figures, show ALL components clearly with labels\n\n' +
+        'Now draw the diagram for this problem. Make sure EVERY geometric element mentioned is drawn: ' + q.question;
+
+      let raw = '';
+      try {
+        raw = await geminiCall(key, [{text: svgPrompt}], 'You are a math diagram SVG generator.', 2000);
+      } catch(e) { return; }
+      raw = raw.trim();
+      raw = raw.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/i, '').trim();
+      // 擷取 SVG 標籤
+      const svgMatch = raw.match(/<svg[\s\S]*?<\/svg>/i);
+      if (!svgMatch) return;
+      let svg = svgMatch[0];
+      // 確保 viewBox 存在，移除固定尺寸
+      if (!svg.includes('viewBox')) {
+        svg = svg.replace('<svg', '<svg viewBox="0 0 300 220"');
+      }
+      svg = svg.replace(/\s(width|height)="[^"]*"/g, '');
+      q.svgCode = svg;
+      injectSVG(i, svg);
+    } catch(e) { console.warn('canvas q'+i, e.message); }
+  }));
+}
+function injectSVG(i, svg) {
+  const cards = document.querySelectorAll('.q-card');
+  const card = cards[i];
+  if (!card) return;
+  const id = 'cvs_'+i;
+  let wrap = document.getElementById('wrap_'+id);
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'wrap_'+id;
+    wrap.className = 'canvas-wrap';
+    wrap.innerHTML = '<div class="canvas-title">📐 幾何圖示（供參考）</div><div id="'+id+'" style="width:100%;max-width:340px;margin:0 auto;border:1px solid #DDD;border-radius:6px;background:#fff;overflow:hidden"></div>';
+    const ansEl = card.querySelector('.q-ans');
+    card.querySelector('.q-body').insertBefore(wrap, ansEl);
+  }
+  const container = document.getElementById(id);
+  if (container) {
+    container.innerHTML = svg;
+    // 讓 SVG 自適應寬度
+    const svgEl = container.querySelector('svg');
+    if (svgEl) {
+      svgEl.style.width = '100%';
+      svgEl.style.height = 'auto';
+      svgEl.style.display = 'block';
+    }
+  }
+}
+
+// 舊的 canvas 注入（向後相容）
+function injectCanvasFromData(i, shapeData) {
+  const cards = document.querySelectorAll('.q-card');
+  const card = cards[i];
+  if (!card) return;
+  const id = 'cvs_'+i;
+  if (!document.getElementById(id)) {
+    const wrap = document.createElement('div');
+    wrap.className = 'canvas-wrap';
+    wrap.innerHTML = '<div class="canvas-title">📐 幾何圖示（供參考）</div><canvas class="q-canvas" id="'+id+'" width="340" height="220"></canvas>';
+    const ansEl = card.querySelector('.q-ans');
+    card.querySelector('.q-body').insertBefore(wrap, ansEl);
+  }
+  requestAnimationFrame(() => drawShape(id, shapeData));
+}
+
+function drawShape(id, data) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.font = '12px Noto Sans TC,sans-serif';
+  ctx.textAlign = 'center';
+
+  const shape = (data.shape||'box').toLowerCase();
+  const d = data.dims || {};
+  const L = d.L||d.length||10, Wi = d.W||d.width||10, Hi = d.H||d.height||10, T = d.T||d.thickness||0;
+
+  // 等角投影輔助
+  function pt(x,y,z) {
+    const sx=1.3, sy=1.2, sz=0.55, ang=30*Math.PI/180;
+    const ox=55, oy=185;
+    return [ox + x*sx - z*sz*Math.cos(ang), oy - y*sy - z*sz*Math.sin(ang)];
+  }
+  function face(pts, fill, stroke) {
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+    ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    ctx.strokeStyle=stroke||'#2C3E50';ctx.lineWidth=1.8;ctx.stroke();
+  }
+  function txt(s,x,y,color,size) {
+    ctx.save();ctx.fillStyle=color||'#2C3E50';
+    ctx.font='bold '+(size||11)+'px Noto Sans TC,sans-serif';
+    ctx.textAlign='center';ctx.fillText(s,x,y);ctx.restore();
+  }
+
+  if (shape === 'rect' || shape === 'rectangle') {
+    const x0=60,y0=40,rw=220,rh=140;
+    ctx.fillStyle='#D6EAF8'; ctx.fillRect(x0,y0,rw,rh);
+    ctx.strokeStyle='#2471A3';ctx.lineWidth=2;ctx.strokeRect(x0,y0,rw,rh);
+    txt(L+'公分',x0+rw/2,y0+rh+18,'#2C3E50',12);
+    ctx.save();ctx.translate(x0-16,y0+rh/2);ctx.rotate(-Math.PI/2);
+    txt(Wi+'公分',0,0,'#2C3E50',12);ctx.restore();
+
+  } else if (shape === 'triangle') {
+    const pad=40;
+    ctx.beginPath();ctx.moveTo(W/2,pad);ctx.lineTo(pad,H-pad);ctx.lineTo(W-pad,H-pad);ctx.closePath();
+    ctx.fillStyle='#D5F5E3';ctx.fill();ctx.strokeStyle='#1E8449';ctx.lineWidth=2;ctx.stroke();
+    txt('底 '+L+'公分',W/2,H-pad+18);
+    ctx.save();ctx.strokeStyle='#999';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(W/2,pad);ctx.lineTo(W/2,H-pad);ctx.stroke();
+    ctx.setLineDash([]);ctx.restore();
+    txt('高 '+Hi+'公分',W/2+30,(pad+H-pad)/2);
+
+  } else if (shape === 'cylinder') {
+    const cx=W/2,cy=H*0.52,rx2=90,ry2=22,ch=130;
+    ctx.fillStyle='#D5F5E3';
+    ctx.fillRect(cx-rx2,cy-ch/2,rx2*2,ch);
+    ctx.beginPath();ctx.ellipse(cx,cy+ch/2,rx2,ry2,0,0,Math.PI*2);
+    ctx.fillStyle='#A9DFBF';ctx.fill();ctx.strokeStyle='#1E8449';ctx.lineWidth=1.8;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(cx,cy-ch/2,rx2,ry2,0,0,Math.PI*2);
+    ctx.fillStyle='#D5F5E3';ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#1E8449';
+    ctx.beginPath();ctx.moveTo(cx-rx2,cy-ch/2);ctx.lineTo(cx-rx2,cy+ch/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+rx2,cy-ch/2);ctx.lineTo(cx+rx2,cy+ch/2);ctx.stroke();
+    txt('半徑 '+L+'公分',cx,cy+ch/2+ry2+18);
+    txt('高 '+Hi+'公分',cx+rx2+28,cy);
+
+  } else {
+    const isOpen = T > 0 || shape.includes('open');
+
+    // ── 自動計算最佳比例讓圖形完整填滿畫布 ──
+    const ang = 30 * Math.PI / 180;
+    const cosA = Math.cos(ang), sinA = Math.sin(ang);
+    // 等角投影：畫面寬 = L*s + Wi*s*0.55*cosA，畫面高 = Hi*s + Wi*s*0.55*sinA
+    const PAD_L=58, PAD_R=68, PAD_T=28, PAD_B=26;
+    const usableW = W - PAD_L - PAD_R;
+    const usableH = H - PAD_T - PAD_B;
+    const sX = usableW / (L + Wi*0.55*cosA);
+    const sY = usableH / (Hi + Wi*0.55*sinA);
+    const s = Math.min(sX, sY, 4);
+    const sz = s * 0.55;
+
+    // 原點 = 左下角頂點（正面左下）
+    const OX = PAD_L;
+    const OY = H - PAD_B;
+
+    function pt(x, y, z) {
+      // x=長方向(右), y=高方向(上), z=寬方向(左後)
+      return [
+        OX + x*s  - z*sz*cosA,
+        OY - y*s  - z*sz*sinA
+      ];
+    }
+
+    const ql=L, qw=Wi, qh=Hi, qt=T;
+
+    // ── 畫圖順序：從遠到近，後畫的蓋前畫的 ──
+    // 等角投影標準順序：背面→左側背→右側背→頂→底→左前→右前→正面
+
+    // 1. 背面（z=qw，從後往前第一個）
+    face([pt(0,0,qw),pt(ql,0,qw),pt(ql,qh,qw),pt(0,qh,qw)], '#C8DDEF', '#2471A3');
+
+    // 2. 頂面（y=qh）
+    if (isOpen) {
+      // 無蓋：只畫邊框，不填色
+      ctx.save(); ctx.strokeStyle='#2471A3'; ctx.lineWidth=1.8;
+      face([pt(0,qh,0),pt(ql,qh,0),pt(ql,qh,qw),pt(0,qh,qw)], null, '#2471A3');
+      ctx.restore();
+      const topC = pt(ql/2, qh, qw/2);
+      txt('（開口）', topC[0], topC[1]-6, '#7F8C8D', 9);
+    } else {
+      face([pt(0,qh,0),pt(ql,qh,0),pt(ql,qh,qw),pt(0,qh,qw)], '#AED6F1', '#2471A3');
+    }
+
+    // 3. 左側面（x=0）
+    face([pt(0,0,0),pt(0,0,qw),pt(0,qh,qw),pt(0,qh,0)], '#A8CBE8', '#2471A3');
+
+    // 4. 右側面（x=ql）
+    face([pt(ql,0,0),pt(ql,0,qw),pt(ql,qh,qw),pt(ql,qh,0)], '#85C1E9', '#2471A3');
+
+    // 5. 底面（y=0）—— 畫在側面前面
+    face([pt(0,0,0),pt(ql,0,0),pt(ql,0,qw),pt(0,0,qw)], '#BDD7EE', '#2471A3');
+
+    // 6. 正面（z=0，最前，最後畫）
+    face([pt(0,0,0),pt(ql,0,0),pt(ql,qh,0),pt(0,qh,0)], '#D6EAF8', '#2471A3');
+
+    // 7. 板厚內壁虛線（畫在所有面之上）
+    if (qt > 0) {
+      ctx.save();
+      ctx.strokeStyle='#5D6D7E'; ctx.lineWidth=1.2; ctx.setLineDash([5,3]);
+      // 正面內壁（縮進 qt）
+      face([pt(qt,qt,qt),pt(ql-qt,qt,qt),pt(ql-qt,qh,qt),pt(qt,qh,qt)], null, '#5D6D7E');
+      // 左側內壁
+      face([pt(qt,qt,qt),pt(qt,qt,qw-qt),pt(qt,qh,qw-qt),pt(qt,qh,qt)], null, '#5D6D7E');
+      // 右側內壁
+      face([pt(ql-qt,qt,qt),pt(ql-qt,qt,qw-qt),pt(ql-qt,qh,qw-qt),pt(ql-qt,qh,qt)], null, '#5D6D7E');
+      ctx.setLineDash([]); ctx.restore();
+    }
+
+    // ── 尺寸標注：文字全部水平，不旋轉 ──
+    function dimLabel(label, x, y, align) {
+      ctx.save();
+      ctx.fillStyle='#1A252F';
+      ctx.font='bold 11px Noto Sans TC,sans-serif';
+      ctx.textAlign = align||'center';
+      ctx.fillText(label, x, y);
+      ctx.restore();
+    }
+    function tick(x1,y1,x2,y2) {
+      ctx.save();
+      ctx.strokeStyle='#555'; ctx.lineWidth=0.9;
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      ctx.restore();
+    }
+
+    // 長(L)：正面底邊，文字在正下方
+    const pBL = pt(0,   0, 0);  // 左下
+    const pBR = pt(ql,  0, 0);  // 右下
+    const midBx = (pBL[0]+pBR[0])/2;
+    const midBy = Math.max(pBL[1],pBR[1]);  // 最低點
+    tick(pBL[0], pBL[1], pBL[0], midBy+6);
+    tick(pBR[0], pBR[1], pBR[0], midBy+6);
+    tick(pBL[0], midBy+6, pBR[0], midBy+6);
+    dimLabel(L+'公分', midBx, midBy+18, 'center');
+
+    // 高(H)：正面左邊，文字在左側，括號往左
+    const pTL = pt(0, qh, 0);   // 左上
+    const midHx = pBL[0] - 16;
+    const midHy = (pBL[1]+pTL[1])/2;
+    tick(pBL[0], pBL[1], midHx, pBL[1]);
+    tick(pTL[0], pTL[1], midHx, pTL[1]);
+    tick(midHx, pBL[1], midHx, pTL[1]);
+    dimLabel(Hi+'公分', midHx-4, midHy+4, 'right');
+
+    // 寬(W)：右側底部斜邊上方，文字水平放在斜邊中點正上方
+    const pFR = pt(ql, 0, 0);   // 右前底
+    const pBK = pt(ql, 0, qw);  // 右後底
+    const midWx = (pFR[0]+pBK[0])/2;
+    const midWy = Math.min(pFR[1],pBK[1]) - 8;  // 斜邊最高點上方
+    tick(pFR[0], pFR[1], pFR[0]+8, pFR[1]-5);
+    tick(pBK[0], pBK[1], pBK[0]+8, pBK[1]-5);
+    tick(pFR[0]+8, pFR[1]-5, pBK[0]+8, pBK[1]-5);
+    dimLabel(Wi+'公分', midWx+18, midWy, 'left');
+
+    // 板厚：右上角
+    if (qt > 0) {
+      const pTR = pt(ql, qh, 0);
+      dimLabel('板厚'+T+'公分', pTR[0]+8, pTR[1]-6, 'left');
+      // 紅色
+      ctx.save();
+      ctx.fillStyle='#E74C3C';
+      ctx.font='bold 11px Noto Sans TC,sans-serif';
+      ctx.textAlign='left';
+      ctx.fillText('板厚'+T+'公分', pTR[0]+8, pTR[1]-6);
+      ctx.restore();
+    }
+  }
+}
+
+// ===== RENDER =====
+const TC = {
+  '計算題':{bg:'#EBF5FB',c:'#2980B9',b:'#AED6F1'},
+  '換算題':{bg:'#EBF5FB',c:'#2980B9',b:'#AED6F1'},
+  '應用題':{bg:'#EAFAF1',c:'#27AE60',b:'#A9DFBF'},
+  '生活情境判斷題':{bg:'#F9EBEA',c:'#C0392B',b:'#F1948A'},
+  '圖形題':{bg:'#FEF9E7',c:'#E67E22',b:'#F9CA24'},
+  'default':{bg:'#F5F5F5',c:'#888',b:'#DDD'},
+};
 
 function renderResult(data) {
-  const detectedType = data.detectedType || (selectedType !== 'auto' ? selectedType : '一般題');
-  const tc = typeColors[detectedType] || typeColors['一般題'];
+  const type = data.detectedType || (qtype!=='auto'?qtype:'一般題');
+  const tc = TC[type]||TC.default;
+  document.getElementById('gradeBadge').textContent = grade;
+  const tb = document.getElementById('typeBadge');
+  tb.textContent = type;
+  tb.style.cssText = 'background:'+tc.bg+';color:'+tc.c+';border:1px solid '+tc.b;
 
-  document.getElementById('gradeBadge').textContent = selectedGrade;
-  const qb = document.getElementById('qtypeBadge');
-  qb.textContent = detectedType;
-  qb.style.cssText = `background:${tc.bg};color:${tc.color};border:1px solid ${tc.border};`;
-  document.getElementById('figureResultNotice').classList.toggle('show', (data.questions||[]).some(q=>q.hasFigure));
-  document.getElementById('originalSummary').innerHTML = `<strong>📌 原題分析</strong>${renderMath(escText(data.originalSummary||''))}`;
+  const ae = document.getElementById('errAnalysis');
+  if (data.errorAnalysis || data.coreSkill || data.format || data.questionCoreSkill) {
+    ae.style.display = 'block';
+    let html = '';
+    // 三維度標籤列
+    const fmt = data.format || '';
+    const core = data.coreSkill || data.questionCoreSkill || '';
+    const trap = data.trapPoint || '';
+    if (fmt || core || trap) {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+      if (fmt)  html += '<span style="background:#EBF5FB;color:#2471A3;border:1px solid #AED6F1;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">📋 '+esc(fmt)+'</span>';
+      if (core) html += '<span style="background:#FFF3CD;color:#856404;border:1px solid #FFD700;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">🎯 '+esc(core)+'</span>';
+      if (trap) html += '<span style="background:#FDEDEC;color:#C0392B;border:1px solid #F1948A;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">⚠️ '+esc(trap)+'</span>';
+      html += '</div>';
+    }
+    if (data.errorAnalysis) html += esc(data.errorAnalysis)+'<br>';
+    if (data.studentWrongAnswer) html += '<span class="wrong">✗ 學生答案：'+esc(data.studentWrongAnswer)+'</span><br>';
+    if (data.correctAnswer) html += '<span class="correct">✓ 正確答案：'+esc(data.correctAnswer)+'</span>';
+    document.getElementById('errAnaContent').innerHTML = html;
+  } else { ae.style.display='none'; }
 
-  const container = document.getElementById('questionsContainer');
-  container.innerHTML = '';
+  document.getElementById('origSum').innerHTML = '<strong>📌 原題分析</strong>'+mth(esc(data.originalSummary||''));
+
+  const con = document.getElementById('qContainer');
+  con.innerHTML = '';
   (data.questions||[]).forEach((q,i) => {
-    const card = document.createElement('div');
-    card.className = 'question-card';
-    card.innerHTML = `
-      <div class="q-header"><div class="q-num">${i+1}</div><div class="q-label">第 ${i+1} 題</div></div>
-      <div class="q-body">
-        <div class="q-text">${renderMath(escText(q.question||''))}</div>
-        ${q.hasFigure ? `<div class="q-figure-hint">✏️ 教師備注：${renderMath(escText(q.figureHint))}</div>` : ''}
-        <div class="q-answer">
-          <button class="q-answer-toggle" onclick="toggleAns(this)"><span>▶</span> 查看解答</button>
-          <div class="q-answer-content">
-            <div>${renderMath(escText(q.solution||''))}</div>
-            <div class="answer-final">✅ 答案：${renderMath(escText(q.answer||''))}</div>
-          </div>
-        </div>
-      </div>`;
-    container.appendChild(card);
+    const d = document.createElement('div');
+    d.className = 'q-card';
+    d.innerHTML =
+      '<div class="q-head"><div class="q-num">'+(i+1)+'</div><div class="q-lbl">第 '+(i+1)+' 題</div></div>'+
+      '<div class="q-body">'+
+        '<div class="q-text">'+mth(esc(q.question||''))+'</div>'+
+        '<div class="q-ans">'+
+          '<button class="q-ans-toggle" onclick="togAns(this)"><span>▶</span> 查看解答</button>'+
+          '<div class="q-ans-body">'+
+            '<div>'+mth(esc(q.solution||''))+'</div>'+
+            '<div class="ans-final">✅ 答案：'+mth(esc(q.answer||''))+'</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    con.appendChild(d);
+    if (q.canvasCode) requestAnimationFrame(()=>injectCanvas(i, q.canvasCode));
   });
-  document.getElementById('resultSection').classList.add('show');
-  setTimeout(() => document.getElementById('resultSection').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+
+  document.getElementById('resultSec').classList.add('show');
+  setTimeout(()=>document.getElementById('resultSec').scrollIntoView({behavior:'smooth',block:'start'}),100);
 }
 
-function escText(s) {
-  if (!s) return '';
-  s = s.replace(/又(?=\{[\d+/]+\})/g, '');
-  const fracs = [];
-  s = s.replace(/\{[\d+/]+\}/g, m => { fracs.push(m); return `%%FRAC${fracs.length-1}%%`; });
-  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  s = s.replace(/%%FRAC(\d+)%%/g, (_,i) => fracs[parseInt(i)]);
+function togAns(btn) {
+  const b = btn.nextElementSibling;
+  b.classList.toggle('show');
+  btn.querySelector('span').textContent = b.classList.contains('show')?'▼':'▶';
+}
+
+// ===== TEXT HELPERS =====
+function mth(s) {
+  if(!s) return '';
+  s = s.replace(/\{(\d+)\+(\d+)\/(\d+)\}/g,(_,w,n,d)=>'<span class="mixed-num"><span>'+w+'</span><span class="frac"><span class="frac-num">'+n+'</span><span class="frac-den">'+d+'</span></span></span>');
+  s = s.replace(/\{(\d+)\/(\d+)\}/g,(_,n,d)=>'<span class="frac"><span class="frac-num">'+n+'</span><span class="frac-den">'+d+'</span></span>');
+  s = s.replace(/\n/g,'<br>');
   return s;
 }
-
-function toggleAns(btn) {
-  const c = btn.nextElementSibling;
-  c.classList.toggle('show');
-  btn.querySelector('span').textContent = c.classList.contains('show') ? '▼' : '▶';
+function esc(s) {
+  if(!s) return '';
+  s = s.replace(/又(?=\{[\d+/]+\})/g,'');
+  const f=[]; s=s.replace(/\{[\d+/]+\}/g,m=>{f.push(m);return'%%F'+(f.length-1)+'%%';});
+  s=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s=s.replace(/%%F(\d+)%%/g,(_,i)=>f[+i]);
+  return s;
+}
+function showErr(msg){const b=document.getElementById('errBox');b.textContent=msg;b.classList.add('show');}
+function setLoading(on,msg){
+  document.getElementById('loading').classList.toggle('show',on);
+  if(msg) document.getElementById('ldMsg').textContent=msg;
 }
 
-// ===== 列印相關邏輯 =====
-function openPrintMenu() { document.getElementById('printMenu').classList.add('show'); document.body.style.overflow='hidden'; }
-function closePrintMenu() { document.getElementById('printMenu').classList.remove('show'); document.body.style.overflow=''; }
+// ===== KEY MANAGEMENT =====
+function getKey(){return localStorage.getItem('gemini_api_key')||'';}
+function validKey(k){return k&&k.startsWith('AIza')&&k.length>20;}
+function updateBanner(){document.getElementById('keyBanner').classList.toggle('show',!validKey(getKey()));}
 
-/**
- * 執行列印
- * @param {boolean} withAnswers 是否包含解答
- */
-function doPrint(withAnswers) {
-  closePrintMenu();
-  if (!lastResult) return;
-
-  const questions = lastResult.questions || [];
-  const questionsHtml = questions.map((q, i) => {
-    const qText = renderMath(escText(q.question || ''));
-    // 如果 withAnswers 為 true，則生成解答區塊，否則為空字串
-    const answerBlock = withAnswers ? `
-      <div style="background:#F0FAFA;border-top:1px solid #B2EBE8;padding:14px 16px;font-size:14px;color:#0D7A74;line-height:2.2;">
-        <div>${renderMath(escText(q.solution || '')).replace(/\n/g,'<br>')}</div>
-        <div style="margin-top:10px;font-weight:700;font-size:15px;">✅ 答案：${renderMath(escText(q.answer || ''))}</div>
-      </div>` : '';
-
-    return `
-      <div style="border:1px solid #DDD;border-radius:12px;margin-bottom:20px;overflow:hidden;page-break-inside:avoid;">
-        <div style="background:#FFF0EB;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #FFE0D0;">
-          <span style="width:26px;height:26px;background:#FF6B35;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;">${i+1}</span>
-          <span style="font-size:13px;color:#D94F1E;font-weight:700;">第 ${i+1} 題</span>
-        </div>
-        <div style="font-size:16px;line-height:2.4;padding:16px;word-break:break-word;">${qText}</div>
-        ${answerBlock}
-      </div>`;
-  }).join('');
-
-  // 建立/更新列印區域
-  let area = document.getElementById('printArea');
-  if (!area) {
-    area = document.createElement('div');
-    area.id = 'printArea';
-    document.body.appendChild(area);
-  }
-
-  area.style.cssText = 'font-family:Noto Sans TC,sans-serif; max-width:800px; margin:0 auto; padding:30px; color:#2D2D2D;';
-  area.innerHTML = `
-    <div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid #FF6B35;">
-      <div style="font-size:22px;font-weight:700;color:#FF6B35;margin-bottom:6px;">數學練習題</div>
-      <div style="font-size:13px;color:#888;">${selectedGrade} ・ ${lastResult.detectedType || ''} ・ 共 3 題 ${withAnswers ? '(含解答)' : '(不含解答)'}</div>
-    </div>
-    <div style="background:#F5F5F5;border-left:4px solid #FF6B35;padding:10px 14px;margin-bottom:20px;font-size:13px;color:#666;line-height:1.8;border-radius:0 8px 8px 0;">
-      <strong style="color:#FF6B35;display:block;font-size:11px;margin-bottom:2px;">📌 原題分析</strong>
-      ${renderMath(escText(lastResult.originalSummary || ''))}
-    </div>
-    ${questionsHtml}`;
-
-  // 延遲確保內容渲染後再列印
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      window.print();
-    });
-  });
+// ===== WELCOME SCREEN =====
+function wlOpen() {
+  const k = getKey();
+  const inp = document.getElementById('wlKey');
+  inp.value = k;
+  inp.className = validKey(k)?'valid':'';
+  document.getElementById('wlSaveBtn').disabled = !validKey(k);
+  document.getElementById('wlSt').textContent = validKey(k)?'✅ 目前已設定 API Key':'';
+  document.getElementById('wlSt').className = 'wl-st'+(validKey(k)?' ok':'');
+  document.getElementById('wlOverlay').classList.add('show');
 }
-
-// 列印完畢後移除 printArea
-window.addEventListener('afterprint', () => {
-  const area = document.getElementById('printArea');
-  if (area) area.remove();
+function wlClose() {
+  document.getElementById('wlOverlay').classList.remove('show');
+  updateBanner();
+}
+function wlSave() {
+  const k = document.getElementById('wlKey').value.trim();
+  if (!validKey(k)) return;
+  localStorage.setItem('gemini_api_key', k);
+  localStorage.setItem('wl_done', '1');
+  document.getElementById('wlSt').textContent = '🎉 已儲存！可以開始使用了';
+  document.getElementById('wlSt').className = 'wl-st ok';
+  updateBanner();
+  setTimeout(wlClose, 1200);
+}
+document.getElementById('wlKey').addEventListener('input', function() {
+  const k = this.value.trim();
+  const ok = validKey(k);
+  this.className = ok?'valid':'';
+  document.getElementById('wlSaveBtn').disabled = !ok;
+  const st = document.getElementById('wlSt');
+  st.textContent = ok?'✅ 格式正確，點儲存完成設定':(k.length>5?'⚠️ 格式不對，請確認是 AIza 開頭的金鑰':'');
+  st.className = 'wl-st'+(ok?' ok':' err');
 });
+
+// ===== SETUP MODAL =====
+function openSetup() {
+  document.getElementById('setupKey').value = getKey();
+  const ok = validKey(getKey());
+  document.getElementById('keySt').textContent = ok?'✅ API Key 已設定':'⚠️ 尚未設定 API Key';
+  document.getElementById('keySt').className = 'key-st '+(ok?'ok':'miss');
+  document.getElementById('setupModal').classList.add('show');
+}
+function closeSetup(){document.getElementById('setupModal').classList.remove('show');}
+function setupSave() {
+  const k = document.getElementById('setupKey').value.trim();
+  if (k) { localStorage.setItem('groq_api_key',k); updateBanner(); setTimeout(closeSetup,500); }
+}
+
+// ===== HISTORY =====
+function saveHist(r) {
+  const h = JSON.parse(localStorage.getItem('mh')||'[]');
+  h.unshift({grade,type:r.detectedType,sum:r.originalSummary,qs:r.questions,t:new Date().toLocaleString()});
+  localStorage.setItem('mh', JSON.stringify(h.slice(0,20)));
+}
+function openHist() { renderHist(); document.getElementById('histModal').classList.add('show'); }
+function closeHist() { document.getElementById('histModal').classList.remove('show'); }
+function renderHist() {
+  const h = JSON.parse(localStorage.getItem('mh')||'[]');
+  const el = document.getElementById('histList');
+  if (!h.length) { el.innerHTML='<div class="hist-empty">📭 沒有紀錄</div>'; return; }
+  el.innerHTML = h.map((x,i)=>'<div class="hist-item" onclick="loadHist('+i+')"><div style="font-size:12px;color:#888;margin-bottom:4px;">'+x.grade+' ・ '+x.t+'</div><div class="hist-sum">'+(x.sum||'')+'</div></div>').join('');
+}
+function loadHist(i) {
+  const h = JSON.parse(localStorage.getItem('mh')||'[]');
+  grade = h[i].grade; lastResult = {detectedType:h[i].type,originalSummary:h[i].sum,questions:h[i].qs};
+  closeHist(); renderResult(lastResult);
+}
+function clearHist(){if(confirm('確定清除？')){localStorage.removeItem('mh');renderHist();}}
+
+// ===== PRINT =====
+function openPrint(){document.getElementById('printModal').classList.add('show');}
+function closePrint(){document.getElementById('printModal').classList.remove('show');}
+function doPrint(withAns) {
+  closePrint(); if(!lastResult) return;
+  const qs = lastResult.questions||[];
+  const qhtml = qs.map((q,i)=>'<div style="border:1px solid #DDD;border-radius:12px;margin-bottom:20px;overflow:hidden;page-break-inside:avoid"><div style="background:#FFF0EB;padding:10px 16px;border-bottom:1px solid #FFE0D0"><span style="background:#FF6B35;color:#fff;border-radius:50%;display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;font-weight:700;font-size:13px;margin-right:8px">'+(i+1)+'</span><strong style="color:#D94F1E">第 '+(i+1)+' 題</strong></div><div style="font-size:16px;line-height:2.4;padding:16px">'+mth(esc(q.question||''))+'</div>'+(withAns?'<div style="background:#F0FAFA;border-top:1px solid #B2EBE8;padding:14px 16px;font-size:14px;color:#0D7A74;line-height:2.2"><div>'+mth(esc(q.solution||''))+'</div><div style="font-weight:700;margin-top:10px">✅ 答案：'+mth(esc(q.answer||''))+'</div></div>':'')+'</div>').join('');
+  let a = document.getElementById('printArea');
+  if (!a){a=document.createElement('div');a.id='printArea';document.body.appendChild(a);}
+  a.style.cssText='font-family:Noto Sans TC,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#2D2D2D';
+  a.innerHTML='<div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid #FF6B35"><div style="font-size:22px;font-weight:700;color:#FF6B35">數學練習題</div><div style="font-size:13px;color:#888">'+grade+'・'+(lastResult.detectedType||'')+'・共3題 '+(withAns?'(含解答)':'(不含解答)')+'</div></div>'+qhtml;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()));
+}
+window.addEventListener('afterprint',()=>{const a=document.getElementById('printArea');if(a)a.remove();});
 
 function copyAll() {
   if (!lastResult) return;
-  let t = `${selectedGrade} 數學練習題\n\n`;
-  (lastResult.questions||[]).forEach((q,i) => {
-    t += `第 ${i+1} 題\n${q.question}\n\n答案：${q.answer}\n\n`;
-  });
-  navigator.clipboard.writeText(t).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = '✅ 已複製！';
-    setTimeout(() => btn.textContent = '📋 複製文字', 2000);
+  let t = grade+' 數學練習題\n\n';
+  (lastResult.questions||[]).forEach((q,i)=>{t+='第'+(i+1)+'題\n'+q.question+'\n\n答案：'+q.answer+'\n\n';});
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.getElementById('copyBtn'); b.textContent='✅ 已複製';
+    setTimeout(()=>b.textContent='📋 複製',2000);
   });
 }
 
-function showError(msg) {
-  const box = document.getElementById('errorBox');
-  box.textContent = msg; box.classList.add('show');
+// ===== INIT =====
+updateBanner();
+// 規則：沒有有效 Key，就一定顯示歡迎畫面
+// 有 Key 但從未按過「儲存」按鈕（可能是舊版留下的），也顯示一次
+var _k = getKey();
+var _done = localStorage.getItem('wl_done');
+if (!validKey(_k) || !_done) {
+  wlOpen();
 }
-
-function resetAll() {
-  location.reload();
-}
-
-// 設定與歷史紀錄
-function openSetup() {
-  document.getElementById('modalApiKey').value = localStorage.getItem('groq_api_key')||'';
-  updateKeyStatus();
-  document.getElementById('setupModal').classList.add('show');
-  document.body.style.overflow='hidden';
-}
-function closeSetup() { document.getElementById('setupModal').classList.remove('show'); document.body.style.overflow=''; }
-function saveKey() {
-  const key = document.getElementById('modalApiKey').value.trim();
-  if (key) { localStorage.setItem('groq_api_key', key); updateKeyStatus(); setTimeout(closeSetup, 500); }
-}
-function updateKeyStatus() {
-  const key = localStorage.getItem('groq_api_key')||'';
-  const el = document.getElementById('keyStatus');
-  const ok = key && key.startsWith('gsk_');
-  el.textContent = ok ? '✅ API Key 已設定' : '⚠️ 尚未設定 API Key';
-  el.className = 'key-status ' + (ok ? 'ok' : 'missing');
-}
-
-function saveHistory(result) {
-  const h = JSON.parse(localStorage.getItem('math_history')||'[]');
-  h.unshift({ grade:selectedGrade, type:result.detectedType, summary:result.originalSummary, questions:result.questions, time:new Date().toLocaleString() });
-  localStorage.setItem('math_history', JSON.stringify(h.slice(0,20)));
-}
-function openHistory() { renderHistoryList(); document.getElementById('historyPanel').classList.add('show'); }
-function closeHistory() { document.getElementById('historyPanel').classList.remove('show'); }
-function renderHistoryList() {
-  const h = JSON.parse(localStorage.getItem('math_history')||'[]');
-  const list = document.getElementById('historyList');
-  if (!h.length) { list.innerHTML='<div class="history-empty">📭 沒有紀錄</div>'; return; }
-  list.innerHTML = h.map((item,i) => `<div class="history-item" onclick="loadHistory(${i})"><div>${item.grade} - ${item.time}</div><div class="hi-summary">${item.summary}</div></div>`).join('');
-}
-function loadHistory(i) {
-  const h = JSON.parse(localStorage.getItem('math_history')||'[]');
-  selectedGrade = h[i].grade;
-  lastResult = { detectedType:h[i].type, originalSummary:h[i].summary, questions:h[i].questions };
-  closeHistory(); renderResult(lastResult);
-}
-function clearHistory() { if(confirm('確定清除？')) { localStorage.removeItem('math_history'); renderHistoryList(); } }
-
-updateKeyStatus();
 </script>
 </body>
 </html>
