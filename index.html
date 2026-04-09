@@ -1082,46 +1082,42 @@ function drawShape(id, data) {
       ctx.restore();
     }
 
-    // 長(L)：正面底邊，文字在正下方
-    const pBL = pt(0,   0, 0);  // 左下
-    const pBR = pt(ql,  0, 0);  // 右下
-    const midBx = (pBL[0]+pBR[0])/2;
-    const midBy = Math.max(pBL[1],pBR[1]);  // 最低點
-    tick(pBL[0], pBL[1], pBL[0], midBy+6);
-    tick(pBR[0], pBR[1], pBR[0], midBy+6);
-    tick(pBL[0], midBy+6, pBR[0], midBy+6);
-    dimLabel(L+'公分', midBx, midBy+18, 'center');
+    // ── 尺寸標注：直接貼在對應的邊上，避免超出畫布 ──
+    // 使用實際的 L Wi Hi T 數值（從 data.dims 來的，不是選項數字）
+    const lblL  = ql+'公分';   // 長
+    const lblW  = qw+'公分';   // 寬
+    const lblH  = qh+'公分';   // 高
+    const lblT  = qt > 0 ? '板厚'+qt+'公分' : '';
 
-    // 高(H)：正面左邊，文字在左側，括號往左
-    const pTL = pt(0, qh, 0);   // 左上
-    const midHx = pBL[0] - 16;
-    const midHy = (pBL[1]+pTL[1])/2;
-    tick(pBL[0], pBL[1], midHx, pBL[1]);
-    tick(pTL[0], pTL[1], midHx, pTL[1]);
-    tick(midHx, pBL[1], midHx, pTL[1]);
-    dimLabel(Hi+'公分', midHx-4, midHy+4, 'right');
+    // 長(L)：正面底邊中點下方
+    const pBL2 = pt(0,  0, 0);
+    const pBR2 = pt(ql, 0, 0);
+    const lblLx = (pBL2[0]+pBR2[0])/2;
+    const lblLy = Math.max(pBL2[1],pBR2[1]) + 16;
+    ctx.save(); ctx.fillStyle='#1A252F'; ctx.font='bold 11px Noto Sans TC,sans-serif';
+    ctx.textAlign='center'; ctx.fillText(lblL, lblLx, lblLy); ctx.restore();
 
-    // 寬(W)：右側底部斜邊上方，文字水平放在斜邊中點正上方
-    const pFR = pt(ql, 0, 0);   // 右前底
-    const pBK = pt(ql, 0, qw);  // 右後底
-    const midWx = (pFR[0]+pBK[0])/2;
-    const midWy = Math.min(pFR[1],pBK[1]) - 8;  // 斜邊最高點上方
-    tick(pFR[0], pFR[1], pFR[0]+8, pFR[1]-5);
-    tick(pBK[0], pBK[1], pBK[0]+8, pBK[1]-5);
-    tick(pFR[0]+8, pFR[1]-5, pBK[0]+8, pBK[1]-5);
-    dimLabel(Wi+'公分', midWx+18, midWy, 'left');
+    // 高(H)：正面右邊（避免超出左邊界），貼在正面右側垂直邊
+    const pFBR = pt(ql, 0,  0);  // 右前下
+    const pFTR = pt(ql, qh, 0);  // 右前上
+    const lblHx = Math.min(pFBR[0] + 28, W - 5);
+    const lblHy = (pFBR[1] + pFTR[1]) / 2 + 4;
+    ctx.save(); ctx.fillStyle='#1A252F'; ctx.font='bold 11px Noto Sans TC,sans-serif';
+    ctx.textAlign='left'; ctx.fillText(lblH, lblHx, lblHy); ctx.restore();
 
-    // 板厚：右上角
+    // 寬(W)：右側斜邊中點，文字放在斜邊右上方
+    const pRF2 = pt(ql, qh, 0);   // 右前上
+    const pRB2 = pt(ql, qh, qw);  // 右後上
+    const lblWx = (pRF2[0]+pRB2[0])/2 + 4;
+    const lblWy = (pRF2[1]+pRB2[1])/2 - 10;
+    ctx.save(); ctx.fillStyle='#1A252F'; ctx.font='bold 11px Noto Sans TC,sans-serif';
+    ctx.textAlign='left'; ctx.fillText(lblW, lblWx, lblWy); ctx.restore();
+
+    // 板厚：紅色，右上角
     if (qt > 0) {
-      const pTR = pt(ql, qh, 0);
-      dimLabel('板厚'+T+'公分', pTR[0]+8, pTR[1]-6, 'left');
-      // 紅色
-      ctx.save();
-      ctx.fillStyle='#E74C3C';
-      ctx.font='bold 11px Noto Sans TC,sans-serif';
-      ctx.textAlign='left';
-      ctx.fillText('板厚'+T+'公分', pTR[0]+8, pTR[1]-6);
-      ctx.restore();
+      const pTR2 = pt(ql, qh, 0);
+      ctx.save(); ctx.fillStyle='#E74C3C'; ctx.font='bold 11px Noto Sans TC,sans-serif';
+      ctx.textAlign='left'; ctx.fillText(lblT, Math.min(pTR2[0]+6, W-60), pTR2[1]-8); ctx.restore();
     }
   }
 }
