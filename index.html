@@ -202,6 +202,12 @@ textarea:focus{border-color:var(--pri)}
 
 #printArea{display:none}
 @media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important}}
+
+/* 驗算 */
+.verify-btn{background:none;border:1.5px solid #F39C12;border-radius:8px;padding:5px 12px;font-size:12px;font-family:'Noto Sans TC',sans-serif;color:#F39C12;cursor:pointer;margin-top:8px;display:inline-block}
+.verify-btn:active{background:#FFF9F0}
+.verify-ok{color:#27AE60;font-size:13px;font-weight:700;margin-top:6px;padding:6px 10px;background:#EAFAF1;border-radius:6px;border:1px solid #A9DFBF}
+.verify-warn{color:#C0392B;font-size:13px;font-weight:700;margin-top:6px;padding:6px 10px;background:#FDEDEC;border-radius:6px;border:1px solid #F1948A}
 </style>
 </head>
 <body>
@@ -471,6 +477,22 @@ function sysPrompt() {
     '單位名稱混淆、需要分兩步計算、分數加減需通分、' +
     '複合圖形（圓內有三角形、兩圓相交）要看清楚各圖形的關係\n' +
     '→ 相似題必須包含同樣的難點，讓學生有機會練習克服\n\n' +
+
+    '【容器板厚計算公式（非常重要，必須嚴格遵守）】\n' +
+    '無蓋容器（水槽、水箱、魚缸）的內部尺寸計算：\n' +
+    '  內部長 = 外部長 - 板厚×2（左右兩側各一片）\n' +
+    '  內部寬 = 外部寬 - 板厚×2（前後兩側各一片）\n' +
+    '  內部高 = 外部高 - 板厚×1（只有底部一片，無蓋所以上方不扣）\n' +
+    '  容積 = 內部長 × 內部寬 × 內部高\n\n' +
+    '有蓋容器（木箱、封閉容器）的內部尺寸計算：\n' +
+    '  內部長 = 外部長 - 板厚×2\n' +
+    '  內部寬 = 外部寬 - 板厚×2\n' +
+    '  內部高 = 外部高 - 板厚×2（上下各一片）\n\n' +
+    '範例（無蓋水槽，外部長80寬40高30，板厚3公分）：\n' +
+    '  內部長 = 80-3-3 = 74公分\n' +
+    '  內部寬 = 40-3-3 = 34公分\n' +
+    '  內部高 = 30-3 = 27公分（無蓋，只扣底部一片！）\n' +
+    '  容積 = 74×34×27 = 67932立方公分 = 67932毫升\n\n' +
 
     '【特別注意：複合圖形題】\n' +
     '如果原題有多個圖形組合，相似題也必須有同樣的複合結構，絕對不能加入原題沒有的圖形（如長方形）。\n' +
@@ -1122,6 +1144,97 @@ function drawShape(id, data) {
   }
 }
 
+// ===== 驗算引擎 =====
+function verifyAnswer(qText, aiAnswer, btnEl) {
+  const result = calcAnswer(qText);
+  const resultEl = btnEl.nextElementSibling;
+  if (!result) {
+    resultEl.className = 'verify-warn';
+    resultEl.textContent = '⚠️ 這題無法自動驗算（請老師人工確認）';
+    return;
+  }
+  // 從 AI 答案中抽取數字
+  const aiNums = [...aiAnswer.matchAll(/[\d,，.]+/g)]
+    .map(m => parseFloat(m[0].replace(/,，/g,'')))
+    .filter(n => !isNaN(n) && n > 0);
+  const aiVal = aiNums.length ? aiNums[0] : null;
+  const diff = aiVal ? Math.abs(aiVal - result.value) / result.value : 1;
+
+  if (aiVal && diff < 0.01) {
+    resultEl.className = 'verify-ok';
+    resultEl.textContent = '✅ 驗算正確！程式計算結果：' + result.value.toLocaleString() + ' ' + result.unit;
+  } else {
+    resultEl.className = 'verify-warn';
+    resultEl.textContent = '❌ 答案可能有誤！正確答案應為：' + result.value.toLocaleString() + ' ' + result.unit +
+      (aiVal ? '（AI 答案：' + aiVal.toLocaleString() + '，差異：' + Math.round(diff*100) + '%）' : '');
+  }
+}
+
+function calcAnswer(txt) {
+  // ── 容器體積／容積題 ──
+  const isContainer = /水槽|水箱|魚缸|水泥槽|木箱|木盒|容器|水泥池/.test(txt);
+  const hasLWH = /長.*寬.*高|長.*高.*寬/.test(txt);
+  if (isContainer && hasLWH) {
+    const Lm = txt.match(/長[\s為是]*([\d.]+)/);
+    const Wm = txt.match(/寬[\s為是]*([\d.]+)/);
+    const Hm = txt.match(/高[\s為是]*([\d.]+)/);
+    const Tm = txt.match(/厚度[是為]?[\s]*([\d.]+)|([\d.]+)[\s]*公分.*?(?:厚度|板厚|玻璃厚|磚塊|水泥)/);
+    if (!Lm || !Wm || !Hm) return null;
+    const L = parseFloat(Lm[1]), W = parseFloat(Wm[1]), H = parseFloat(Hm[1]);
+    const T = Tm ? parseFloat(Tm[1]||Tm[2]) : 0;
+    const isOpen = /無蓋/.test(txt);
+    const isClosed = /有蓋|木箱|封閉/.test(txt) && !/無蓋/.test(txt);
+    const innerL = L - T*2;
+    const innerW = W - T*2;
+    const innerH = isOpen ? H - T : (isClosed ? H - T*2 : H - T);
+    if (innerL <= 0 || innerW <= 0 || innerH <= 0) return null;
+    const vol = Math.round(innerL * innerW * innerH);
+    return { value: vol, unit: '毫升', formula: `(${L}-${T}×2)×(${W}-${T}×2)×(${H}-${T})=${vol}` };
+  }
+
+  // ── 圓周長 ──
+  const isCircumference = /圓.*周長|周長.*圓/.test(txt) && !/三角形/.test(txt);
+  if (isCircumference) {
+    const Dm = txt.match(/直徑[是為]?[\s]*([\d.]+)/);
+    const Rm = txt.match(/半徑[是為]?[\s]*([\d.]+)/);
+    if (Dm) {
+      const c = Math.round(parseFloat(Dm[1]) * 3.14 * 100) / 100;
+      return { value: c, unit: '公分', formula: `${Dm[1]}×3.14=${c}` };
+    }
+    if (Rm) {
+      const c = Math.round(parseFloat(Rm[1]) * 2 * 3.14 * 100) / 100;
+      return { value: c, unit: '公分', formula: `${Rm[1]}×2×3.14=${c}` };
+    }
+  }
+
+  // ── 兩圓三角形題（周長÷3=半徑）──
+  const isTwoCircles = /兩個相同.*圓|2個相同.*圓/.test(txt) && /三角形.*周長|周長.*三角形/.test(txt);
+  if (isTwoCircles) {
+    const Cm = txt.match(/周長[是為]?[\s]*([\d.]+)/);
+    if (Cm) {
+      const r = Math.round(parseFloat(Cm[1]) / 3 * 100) / 100;
+      const d = r * 2;
+      return { value: r, unit: '公分（半徑），直徑=' + d + '公分', formula: `${Cm[1]}÷3=${r}` };
+    }
+  }
+
+  // ── 單位換算（毫升↔公升）──
+  const isConvert = /毫升.*公升|公升.*毫升|立方公分.*公升|公升.*立方公分/.test(txt) && /等於|換算|=/.test(txt);
+  if (isConvert) {
+    const nums = [...txt.matchAll(/[\d.]+/g)].map(m=>parseFloat(m[0])).filter(n=>n>0);
+    const val = nums.find(n => n > 1) || nums[0];
+    if (!val) return null;
+    if (/毫升.*公升|立方公分.*公升/.test(txt)) {
+      return { value: Math.round(val/1000*1000)/1000, unit: '公升', formula: `${val}÷1000=${val/1000}` };
+    }
+    if (/公升.*毫升|公升.*立方公分/.test(txt)) {
+      return { value: val*1000, unit: '毫升', formula: `${val}×1000=${val*1000}` };
+    }
+  }
+
+  return null; // 無法自動驗算
+}
+
 // ===== RENDER =====
 const TC = {
   '計算題':{bg:'#EBF5FB',c:'#2980B9',b:'#AED6F1'},
@@ -1177,6 +1290,8 @@ function renderResult(data) {
           '<div class="q-ans-body">'+
             '<div>'+mth(esc(q.solution||''))+'</div>'+
             '<div class="ans-final">✅ 答案：'+mth(esc(q.answer||''))+'</div>'+
+            '<button class="verify-btn" onclick="verifyAnswer('+JSON.stringify(q.question||'')+','+JSON.stringify(q.answer||'')+',this)">🔢 程式驗算</button>'+
+            '<div></div>'+
           '</div>'+
         '</div>'+
       '</div>';
